@@ -1,0 +1,190 @@
+<?xml version="1.0" encoding="utf-8"?>
+<search>
+  <entry>
+    <title>mysqldump 源码分析</title>
+    <url>/2020/11/15/mysqldump-%E5%88%86%E6%9E%90/</url>
+    <content><![CDATA[<h2 id="1-前言"><a href="#1-前言" class="headerlink" title="1. 前言"></a>1. 前言</h2><p>mysqldump 作为 MySQL 源生支持的逻辑复制工具自从上古时代就已经被DBA广泛使用，时至今日，很多人都依然在用他作为轻量级数据库的备份工具。</p>
+<p>虽然在 MySQL 复制工具中 mysqldump 具有 OG 地位，但是不可否认在当代社会，<code>单线程复制</code>，<code>逻辑导出</code>完全无法 cover 大部分的备份需求场景，比如对于近TB级别的数据如果用mysqldump导出并不落盘的直接写入到其他节点中，可能要以天为时间计量单位去计算一次恢复耗时。试问，谁能忍受我们常用的网站突然某一天弹出一个提示框：<code>今天网站数据迁移，请后天进行访问。</code> </p>
+<p>而今天本着对时代的缅怀，我想再好好看看 <code>mysqldump</code> 是如何实现的。而快速了解基本实现逻辑，最好的莫过于从他刚刚出生不久时候开始。接下来，我们穿越回上古，看看他年轻时候的样子吧。</p>
+<a id="more"></a>
+
+<h2 id="2-源码分析"><a href="#2-源码分析" class="headerlink" title="2. 源码分析"></a>2. 源码分析</h2><h3 id="2-1-源码版本"><a href="#2-1-源码版本" class="headerlink" title="2.1 源码版本"></a>2.1 源码版本</h3><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">git remote -vv </span><br><span class="line">origin	https:&#x2F;&#x2F;github.com&#x2F;TCeason&#x2F;MySQL-4.1.21.git (fetch)</span><br><span class="line">origin	https:&#x2F;&#x2F;github.com&#x2F;TCeason&#x2F;MySQL-4.1.21.git (push)</span><br><span class="line"></span><br><span class="line">$ git log -1|more</span><br><span class="line">commit 1a6487c79b109dc944191dbaff1fe077290c1af9</span><br><span class="line"></span><br><span class="line">$ ls client&#x2F;mysqldump.c </span><br><span class="line">client&#x2F;mysqldump.c</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p>在本版本中，mysqldump 作为一个客户端命令，位于 <code>client/mysqldump.c</code>，仅仅有两千行代码。</p>
+<p>而有意思的是，在 4.0.10 版本中，只有一千多行代码，也许是因为4.1 相对于 4.0 增加了隔离级别的概念，因此功能相对丰富了。而在 5.7 中已经接近万行了，也许未来会是一个破万的C代码。</p>
+<p>从是 4.0 版本到 5.7 版本，他就这么静静的矗立在这里，即使会被时代渐渐抛弃，也依然坚挺。不得不说，respect！！</p>
+<h3 id="2-3-分析"><a href="#2-3-分析" class="headerlink" title="2.3 分析"></a>2.3 分析</h3><p>下面的分析仅仅基于目前 MySQL DB Engine 的顶流 INNODB。</p>
+<p><a href="https://github.com/TCeason/MySQL-4.1.21/blob/main/client/mysqldump.c#L2638">main方法：</a></p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">int main(int argc, char **argv)</span><br><span class="line">&#123;</span><br><span class="line">  compatible_mode_normal_str[0]&#x3D; 0;</span><br><span class="line">  default_charset&#x3D; (char *)mysql_universal_client_charset;</span><br><span class="line">  bzero((char*) &amp;ignore_table, sizeof(ignore_table));</span><br><span class="line"></span><br><span class="line">  MY_INIT(&quot;mysqldump&quot;);</span><br><span class="line">  if (get_options(&amp;argc, &amp;argv))</span><br><span class="line">    ...</span><br><span class="line"> </span><br><span class="line">  if (dbConnect(current_host, current_user, opt_password))</span><br><span class="line">    exit(EX_MYSQLERR);</span><br><span class="line">  </span><br><span class="line">  ...</span><br><span class="line"></span><br><span class="line">  if ((opt_lock_all_tables || opt_master_data) &amp;&amp;</span><br><span class="line">      do_flush_tables_read_lock(sock))</span><br><span class="line">    goto err;</span><br><span class="line">  if (opt_single_transaction &amp;&amp; start_transaction(sock, test(opt_master_data)))</span><br><span class="line">      goto err;</span><br><span class="line">  </span><br><span class="line">  ...</span><br><span class="line">  </span><br><span class="line">  if (opt_lock_all_tables || opt_master_data)</span><br><span class="line">  &#123;</span><br><span class="line">    if (flush_logs &amp;&amp; mysql_refresh(sock, REFRESH_LOG))</span><br><span class="line">      goto err;</span><br><span class="line">    flush_logs&#x3D; 0; &#x2F;* not anymore; that would not be sensible *&#x2F;</span><br><span class="line">  &#125;</span><br><span class="line">  if (opt_master_data &amp;&amp; do_show_master_status(sock))</span><br><span class="line">    goto err;</span><br><span class="line">  if (opt_single_transaction &amp;&amp; do_unlock_tables(sock)) &#x2F;* unlock but no commit! *&#x2F;</span><br><span class="line">    goto err;</span><br><span class="line"></span><br><span class="line">  if (opt_alldbs)</span><br><span class="line">    dump_all_databases();</span><br><span class="line">  else if (argc &gt; 1 &amp;&amp; !opt_databases)</span><br><span class="line">  &#123;</span><br><span class="line">    &#x2F;* Only one database and selected table(s) *&#x2F;</span><br><span class="line">    dump_selected_tables(*argv, (argv + 1), (argc - 1));</span><br><span class="line">  &#125;</span><br><span class="line">  else</span><br><span class="line">  &#123;</span><br><span class="line">    &#x2F;* One or more databases, all tables *&#x2F;</span><br><span class="line">    dump_databases(argv);</span><br><span class="line">  &#125;</span><br><span class="line">#ifdef HAVE_SMEM</span><br><span class="line">  my_free(shared_memory_base_name,MYF(MY_ALLOW_ZERO_PTR));</span><br><span class="line">#endif</span><br><span class="line">  &#x2F;*</span><br><span class="line">    No reason to explicitely COMMIT the transaction, neither to explicitely</span><br><span class="line">    UNLOCK TABLES: these will be automatically be done by the server when we</span><br><span class="line">    disconnect now. Saves some code here, some network trips, adds nothing to</span><br><span class="line">    server.</span><br><span class="line">  *&#x2F;</span><br><span class="line">err:</span><br><span class="line">  dbDisconnect(current_host);</span><br><span class="line">  if (!path)</span><br><span class="line">    write_footer(md_result_file);</span><br><span class="line">  if (md_result_file !&#x3D; stdout)</span><br><span class="line">    my_fclose(md_result_file, MYF(0));</span><br><span class="line">  my_free(opt_password, MYF(MY_ALLOW_ZERO_PTR));</span><br><span class="line">  if (hash_inited(&amp;ignore_table))</span><br><span class="line">    hash_free(&amp;ignore_table);</span><br><span class="line">  if (extended_insert)</span><br><span class="line">    dynstr_free(&amp;extended_row);</span><br><span class="line">  if (insert_pat_inited)</span><br><span class="line">    dynstr_free(&amp;insert_pat);</span><br><span class="line">  my_end(0);</span><br><span class="line">  return(first_error);</span><br><span class="line">&#125; &#x2F;* main *&#x2F;</span><br><span class="line"></span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<h4 id="2-3-1-get-options"><a href="#2-3-1-get-options" class="headerlink" title="2.3.1.  get_options"></a>2.3.1.  get_options</h4><p>主要是用来检查选项设置是否合理。比如当指定 –single-transaction =1 的同时还指定了 –lock-all-tables = 1 这时，由于两者的行为是冲突的，就会直接报错。</p>
+<blockquote>
+<ul>
+<li><p>–lock-all-tables<br>Locks all tables across all databases. This<br>is achieved by taking a global read lock for the duration of the whole </p>
+</li>
+<li><p>–single-transaction<br>single-transaction is specified too (in which case a<br>global read lock is only taken a short time at the beginning of the dump<br>don’t forget to read about –single-transaction below). In all cases<br>any action on logs will happen at the exact moment of the dump.dump.</p>
+</li>
+<li><p>–master-data<br>This causes the binary log position and filename to be appended to the<br>output. If equal to 1, will print it as a CHANGE MASTER command; if equal<br> to 2, that command will be prefixed with a comment symbol.<br>This option will turn –lock-all-tables on, unless<br>–single-transaction is specified too (in which case a<br>global read lock is only taken a short time at the beginning of the dump<br>don’t forget to read about –single-transaction below). In all cases<br>any action on logs will happen at the exact moment of the dump.<br>Option automatically turns –lock-tables off.</p>
+</li>
+</ul>
+</blockquote>
+<p>其实，从参数解释来看，我们在生产中大多数情况下，应该要设置–master-data=1, –single-transaction =1; 而当 –master-data=1 时，–lock-all-tables 会被该函数自动处理成 !single-transaction。</p>
+<p>接下来的流程分析，也将会按照这三个配置进行下去。</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">--master-data &#x3D; 1;</span><br><span class="line">--single-transaction &#x3D; 1; </span><br><span class="line">--lock-all-tables &#x3D; 0;</span><br></pre></td></tr></table></figure>
+
+<h4 id="2-3-2-dbConnect"><a href="#2-3-2-dbConnect" class="headerlink" title="2.3.2. dbConnect"></a>2.3.2. dbConnect</h4><p>顾名思义，主要是给 MYSQL 类型的 sock 赋值。并选择。核心内容如下：</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">static MYSQL mysql_connection,*sock&#x3D;0;</span><br><span class="line"></span><br><span class="line">static int dbConnect(char *host, char *user,char *passwd)</span><br><span class="line">&#123;</span><br><span class="line">	...</span><br><span class="line">	mysql_init(&amp;mysql_connection);</span><br><span class="line">	mysql_options(&amp;mysql_connection, MYSQL_SET_CHARSET_NAME, default_charset);</span><br><span class="line">	if (!(sock&#x3D; mysql_real_connect(&amp;mysql_connection,host,user,passwd,</span><br><span class="line">	       NULL,opt_mysql_port,opt_mysql_unix_port,</span><br><span class="line">	       0)))</span><br><span class="line">	&#123;</span><br><span class="line">	  DBerror(&amp;mysql_connection, &quot;when trying to connect&quot;);</span><br><span class="line">	  return 1;</span><br><span class="line">	&#125;</span><br><span class="line">	...</span><br><span class="line">	return 0;</span><br><span class="line">&#125;  </span><br></pre></td></tr></table></figure>
+
+<h4 id="2-3-3-FTWRL"><a href="#2-3-3-FTWRL" class="headerlink" title="2.3.3. FTWRL"></a>2.3.3. FTWRL</h4><figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line"><span class="keyword">if</span> ((opt_lock_all_tables || opt_master_data) &amp;&amp;</span><br><span class="line">   do_flush_tables_read_lock(sock))</span><br><span class="line"> <span class="keyword">goto</span> err;</span><br></pre></td></tr></table></figure>
+
+<p>在这一步中，由于需要记录当前的binlog位点，因此，需要对所有的表加锁，主要执行了下面两个 SQL 。</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">FLUSH TABLES；</span><br><span class="line">FLUSH TABLES WITH READ LOCK;</span><br></pre></td></tr></table></figure>
+
+<p>直接加 FTWRL 其实就可以获得当前 Server 的一致位点，但是，为了防止当前有 long query运行，导致长时间锁住 Server，先通过 Flush tables 等待 long query 结束，然后快速对整个 DB 加锁。但是，如果刚好在两个查询执行期间有 long query，就无能为力了。</p>
+<p><a href="https://dev.mysql.com/doc/internals/en/flush-tables.html">FLUSH TABLES传送门</a><br><a href="https://dev.mysql.com/doc/refman/5.7/en/flush.html#flush-tables-with-read-lock">FTWRL传送门</a></p>
+<h4 id="2-3-4-start-transaction"><a href="#2-3-4-start-transaction" class="headerlink" title="2.3.4. start_transaction"></a>2.3.4. start_transaction</h4><figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line"><span class="keyword">if</span> (opt_single_transaction &amp;&amp; start_transaction(sock, test(opt_master_data)))</span><br><span class="line">     <span class="keyword">goto</span> err;</span><br><span class="line"><span class="function"><span class="keyword">static</span> <span class="keyword">int</span> <span class="title">start_transaction</span><span class="params">(MYSQL *mysql_con, my_bool consistent_read_now)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">  <span class="keyword">return</span> (mysql_query_with_error_report(mysql_con, <span class="number">0</span>,</span><br><span class="line">                                        <span class="string">&quot;SET SESSION TRANSACTION ISOLATION &quot;</span></span><br><span class="line">                                        <span class="string">&quot;LEVEL REPEATABLE READ&quot;</span>) ||</span><br><span class="line">          mysql_query_with_error_report(mysql_con, <span class="number">0</span>,</span><br><span class="line">                                        consistent_read_now ?</span><br><span class="line">                                        <span class="string">&quot;START TRANSACTION &quot;</span></span><br><span class="line">                                        <span class="string">&quot;WITH CONSISTENT SNAPSHOT&quot;</span> :</span><br><span class="line">                                        <span class="string">&quot;BEGIN&quot;</span>));</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>在代码里面有一个 test(opt_master_data)，其实是这样实现的：</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">#define MY_TEST(a)		((a) ? 1 : 0)</span><br></pre></td></tr></table></figure>
+
+<p>因此，执行的sql是将隔离级别设置为RR，并且开启一致性事务。</p>
+<figure class="highlight sql"><table><tr><td class="code"><pre><span class="line"><span class="keyword">SET</span> <span class="keyword">SESSION</span> <span class="keyword">TRANSACTION</span> <span class="keyword">ISOLATION</span> <span class="keyword">LEVEL</span> REPEATABLE <span class="keyword">READ</span>;</span><br><span class="line"><span class="keyword">START</span> <span class="keyword">TRANSACTION</span> <span class="keyword">WITH</span> <span class="keyword">CONSISTENT</span> <span class="keyword">SNAPSHOT</span>;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p><a href="https://dev.mysql.com/doc/refman/5.7/en/innodb-transaction-isolation-levels.html">事务隔离级别传送门</a><br><a href="https://dev.mysql.com/doc/refman/5.7/en/commit.html">一致性事务传送门</a></p>
+<h4 id="2-3-5-Refresh-logs"><a href="#2-3-5-Refresh-logs" class="headerlink" title="2.3.5. Refresh logs"></a>2.3.5. Refresh logs</h4><figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line"><span class="keyword">if</span> (opt_lock_all_tables || opt_master_data)</span><br><span class="line"> &#123;</span><br><span class="line">   <span class="keyword">if</span> (flush_logs &amp;&amp; mysql_refresh(sock, REFRESH_LOG))</span><br><span class="line">     <span class="keyword">goto</span> err;</span><br><span class="line">   flush_logs= <span class="number">0</span>; <span class="comment">/* not anymore; that would not be sensible */</span></span><br><span class="line"> &#125;</span><br></pre></td></tr></table></figure>
+
+<p>这里主要是执行sql <code>flush logs</code>，用来刷新一下binlog，为了更好的区分开始dump的数据点和未来需要继续重放的增量位点。</p>
+<h4 id="2-3-6-SHOW-MASTER-STATUS"><a href="#2-3-6-SHOW-MASTER-STATUS" class="headerlink" title="2.3.6. SHOW MASTER STATUS"></a>2.3.6. SHOW MASTER STATUS</h4><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">if (opt_master_data &amp;&amp; do_show_master_status(sock))</span><br><span class="line">   goto err;</span><br></pre></td></tr></table></figure>
+
+<p>在上一步中，我们给了server全局锁并且拿到了一致性事务视图，为了降低难度更是刷新了binlog文件，就可以放心的获取当前位点状态了。直接执行 <code>SHOW MASTER STATUS</code> 获取位点。</p>
+<h4 id="2-3-7-UNLOCK-TABLES"><a href="#2-3-7-UNLOCK-TABLES" class="headerlink" title="2.3.7. UNLOCK TABLES"></a>2.3.7. UNLOCK TABLES</h4><figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line"><span class="keyword">if</span> (opt_single_transaction &amp;&amp; do_unlock_tables(sock)) <span class="comment">/* unlock but no commit! */</span></span><br><span class="line">   <span class="keyword">goto</span> err;</span><br></pre></td></tr></table></figure>
+
+<p>拿到了位点之后，需要将锁释放掉，让 Server 恢复读写，也因此，需要执行 SQL <code>UNLOCCK TABLES</code>。而接下来，我们就是要分情况去 dump 数据了。</p>
+<h4 id="2-3-8-DUMP"><a href="#2-3-8-DUMP" class="headerlink" title="2.3.8. DUMP"></a>2.3.8. DUMP</h4><figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line"><span class="keyword">if</span> (opt_alldbs)</span><br><span class="line">  dump_all_databases();</span><br><span class="line"><span class="keyword">else</span> <span class="keyword">if</span> (argc &gt; <span class="number">1</span> &amp;&amp; !opt_databases)</span><br><span class="line">&#123;</span><br><span class="line">  <span class="comment">/* Only one database and selected table(s) */</span></span><br><span class="line">  dump_selected_tables(*argv, (argv + <span class="number">1</span>), (argc - <span class="number">1</span>));</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">else</span></span><br><span class="line">&#123;</span><br><span class="line">  <span class="comment">/* One or more databases, all tables */</span></span><br><span class="line">  dump_databases(argv);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>根据命令行传入的参数不同，决定是 dump 全量 DB 还是某个 DB 下的一些表还是某些 DB 下的所有表。</p>
+<p>而关键做事情的函数是：</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">static int dump_all_tables_in_db(char *database)</span><br><span class="line">&#123;</span><br><span class="line">  ...</span><br><span class="line">  if (lock_tables)</span><br><span class="line">  &#123;</span><br><span class="line">    DYNAMIC_STRING query;</span><br><span class="line">    init_dynamic_string(&amp;query, &quot;LOCK TABLES &quot;, 256, 1024);</span><br><span class="line">    for (numrows&#x3D; 0 ; (table&#x3D; getTableName(1)) ; numrows++)</span><br><span class="line">    &#123;</span><br><span class="line">      dynstr_append(&amp;query, quote_name(table, table_buff, 1));</span><br><span class="line">      dynstr_append(&amp;query, &quot; READ &#x2F;*!32311 LOCAL *&#x2F;,&quot;);</span><br><span class="line">    &#125;</span><br><span class="line">    if (numrows &amp;&amp; mysql_real_query(sock, query.str, query.length-1))</span><br><span class="line">      DBerror(sock, &quot;when using LOCK TABLES&quot;);</span><br><span class="line">            &#x2F;* We shall continue here, if --force was given *&#x2F;</span><br><span class="line">    dynstr_free(&amp;query);</span><br><span class="line">  &#125;</span><br><span class="line">  ...</span><br><span class="line">  while ((table&#x3D; getTableName(0)))</span><br><span class="line">  &#123;</span><br><span class="line">    char *end&#x3D; strmov(afterdot, table);</span><br><span class="line">    if (include_table(hash_key, end - hash_key))</span><br><span class="line">    &#123;</span><br><span class="line">      numrows &#x3D; getTableStructure(table, database);</span><br><span class="line">      if (!dFlag &amp;&amp; numrows &gt; 0)</span><br><span class="line">	dumpTable(numrows,table);</span><br><span class="line">      my_free(order_by, MYF(MY_ALLOW_ZERO_PTR));</span><br><span class="line">      order_by&#x3D; 0;</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">  ...</span><br><span class="line">  if (lock_tables)</span><br><span class="line">    mysql_query_with_error_report(sock, 0, &quot;UNLOCK TABLES&quot;);</span><br><span class="line">  return 0;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">static int dump_selected_tables(char *db, char **table_names, int tables)</span><br><span class="line">&#123; ... &#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+<p><code>dump_all_tables_in_db</code> 和 <code>dump_selected_tables</code> 实现方式大同小异，不过 dump_all_tables_in_db 由于不需要手动指定 DB ，所以，只需要获取当前一致性事务中，存在的 tables 即可，可以从系统表中或者直接 show tables 获取，而 dump_selected_tables 由于有一个手动输入过程，所以，还要去校验一下输入的 tables 是否在 Server 中存在。</p>
+<p>他们相同的地方就是，都对某个库下的 tables 加锁，然后获取完整个库下面的 Tables 数据后，再执行<code>UNLOCK TABLES</code>。</p>
+<p>由于 MySQL 的 DDL 并不支持事务，所以，很不幸，如果你在 dump 过程中做了 DDL，可能会出现一些问题。而在目前的 8.0 版本中，依然没有对 DDL 支持事务。</p>
+<h4 id="2-3-9-COMMIT"><a href="#2-3-9-COMMIT" class="headerlink" title="2.3.9. COMMIT"></a>2.3.9. COMMIT</h4><p>找了通篇，都不会找到的。因为，仅仅是执行了 DQL ，所以在链接断开时，自动去做 commit 是没有问题的。</p>
+<h2 id="3-总结"><a href="#3-总结" class="headerlink" title="3. 总结"></a>3. 总结</h2><p>当有了隔离级别以后，可以比较准确的获取数据信息，轻松拿到待同步的增量位点，而 binlog 也是可以反向解析成 SQL 的。因此，虽然 mysqldump 已经老的提不动刀，无法继续冲杀在一线生产环境。但是，他依然为很多异构数据库提供了同步 MySQL 数据的思路和方法。</p>
+<p>比如，16年开源的迅速在中国成为时下最火爆的 AP 数据库 <a href="https://clickhouse.yandex/docs/">ClickHouse</a>，他实现了 [MaterializeMySQL 引擎](MaterializeMySQL 引擎)，可以实现对 MySQL 5.7 和 MySQL 8.0 的全量 + 增量同步。目前这个功能的使用者和体验者还不是很多，但是预估在不久的未来，会成为一个企业级可用的功能。</p>
+]]></content>
+      <categories>
+        <category>DataBase</category>
+      </categories>
+      <tags>
+        <tag>MySQL</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>天啊我的 MySQL 出 bug 了</title>
+    <url>/2020/06/13/%E5%A4%A9%E5%95%8A%E6%88%91%E7%9A%84-MySQL-%E5%87%BA-bug-%E4%BA%86/</url>
+    <content><![CDATA[<p>有这么一天，我们吃着火锅，唱着歌，突然就被手机铃声给劫了。一接电话</p>
+<p>问曰：咋回事捏？</p>
+<p>骂曰：看看你这破数据库，error log 里面居然有 bug 信息。赶紧回来，不然别想混了！！！</p>
+<p>得，骑上我心爱的小毛驴飞过去处理吧。</p>
+<a id="more"></a>
+
+<p>其实，数据库也是一种软件，而软件怎么会没有 bug 呢？曾记得小时候的武侠中都是这样的，独孤九剑，没有固定的招式，而想要学会太极拳就要忘记太极拳。</p>
+<p>那么怎么让软件没有 bug 呢？或许就是消灭这个软件吧。那么什么样的软件 bug 少呢？或许就是使用者极少吧。</p>
+<p>好了，言归正传，当我们真的遇到 MySQL 日志中打印了一堆 bug 信息该怎么解决呢？</p>
+<h2 id="1-这是一段-bug"><a href="#1-这是一段-bug" class="headerlink" title="1. 这是一段 bug"></a>1. 这是一段 bug</h2><p>当我们看到 error log 中出现下面的描述，一般是使用方法错误，或者真的遇到了 bug。这个时候，只需要根据 stack 信息进行 trace，就能进一步定位问题。</p>
+<figure class="highlight txt"><table><tr><td class="code"><pre><span class="line">03:51:06 UTC - mysqld got signal 11 ;</span><br><span class="line">This could be because you hit a bug. It is also possible that this binary</span><br><span class="line">or one of the libraries it was linked against is corrupt, improperly built,</span><br><span class="line">or misconfigured. This error can also be caused by malfunctioning hardware.</span><br><span class="line">We will try our best to scrape up some info that will hopefully help</span><br><span class="line">diagnose the problem, but since we have already crashed, </span><br><span class="line">something is definitely wrong and this may fail.</span><br><span class="line">Please help us make Percona Server better by reporting any</span><br><span class="line">bugs at https://bugs.percona.com/</span><br><span class="line"></span><br><span class="line">key_buffer_size=8388608</span><br><span class="line">read_buffer_size=131072</span><br><span class="line">max_used_connections=0</span><br><span class="line">max_threads=153</span><br><span class="line">thread_count=0</span><br><span class="line">connection_count=0</span><br><span class="line">It is possible that mysqld could use up to </span><br><span class="line">key_buffer_size + (read_buffer_size + sort_buffer_size)*max_threads = 69061 K  bytes of memory</span><br><span class="line">Hope that&#x27;s ok; if not, decrease some variables in the equation.</span><br><span class="line"></span><br><span class="line">Thread pointer: 0x0</span><br><span class="line">Attempting backtrace. You can use the following information to find out</span><br><span class="line">where mysqld died. If you see no messages after this, something went</span><br><span class="line">terribly wrong...</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p>你看，MySQL 告诉你了，如果真的啥都没有，那么可就糟糕透了。万幸的是，我们继续往下看，能看到一些东西。</p>
+<figure class="highlight txt"><table><tr><td class="code"><pre><span class="line">stack_bottom = 0 thread_stack 0x40000</span><br><span class="line">./bin/mysqld(my_print_stacktrace+0x3b)[0x8f7eab]</span><br><span class="line">./bin/mysqld(handle_fatal_signal+0x49a)[0x66d55a]</span><br><span class="line">/lib/x86_64-linux-gnu/libpthread.so.0(+0x11390)[0x7f6f44fc2390]</span><br><span class="line">./bin/mysqld(_ZN9MYSQL_LOG17generate_new_nameEPcPKc+0x9d)[0x657c4d]</span><br><span class="line">./bin/mysqld(_ZN9MYSQL_LOG26init_and_set_log_file_nameEPKcS1_13enum_log_type10cache_type+0x57)[0x657d07]</span><br><span class="line">./bin/mysqld(_ZN13MYSQL_BIN_LOG11open_binlogEPKcS1_10cache_typembbbbP28Format_description_log_event+0x7b)[0x89a22b]</span><br><span class="line">./bin/mysqld(_Z11mysqld_mainiPPc+0x1bab)[0x5acbfb]</span><br><span class="line">/lib/x86_64-linux-gnu/libc.so.6(__libc_start_main+0xf0)[0x7f6f44366830]</span><br><span class="line">./bin/mysqld(_start+0x29)[0x59e659]</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p>好家伙，虚惊一场啊。有了 bug 果还有 bug 因，接下来，我们只需要沿着脉络去探索就好了。或许问题不大。</p>
+<h2 id="2-理清-bug-迎难而上吧"><a href="#2-理清-bug-迎难而上吧" class="headerlink" title="2. 理清 bug 迎难而上吧"></a>2. 理清 bug 迎难而上吧</h2><p>对于一些”高玩“们，看懂这段 bug info 并不是什么难事，而对于我们，难如登天啊有木有，一段段的内存地址，密密麻麻的英文描述。所以，这个时候，我们需要什么，需要工具！！</p>
+<p>我相信如果你能看到这里，已经通过 <a href="/2020/06/13/%E7%A9%BA%E6%9C%89-MySQL-Server-%E5%A6%82%E4%BD%95%E6%88%90%E4%B8%BA%E9%AB%98%E7%8E%A9/" title="空有-MySQL-Server-如何成为高玩">空有-MySQL-Server-如何成为高玩</a> 将 debug 后的 mysqld 加入到了机器的 PATH 变量中。</p>
+<p>我们继续以上面的 bug info 为例子，看看如何让他变成代码具体位置。</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line"><span class="meta">$</span><span class="bash"> mysqld_path=$(<span class="built_in">which</span> mysqld)</span></span><br><span class="line"></span><br><span class="line"><span class="meta">$</span><span class="bash"> nm  -n <span class="variable">$mysqld_path</span> &gt; /tmp/mysqld.sym</span></span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p><strong>注意</strong>：编译的 debug 版本，可以将 <code>which mysqld</code> 替换为 <code>which mysqld-debug</code></p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line"><span class="meta">#</span><span class="bash"> resolve_stack_dump 位于 MySQL basedir/bin</span></span><br><span class="line"><span class="meta">#</span><span class="bash"> 我把上面的 bug info 存到了 /tmp/mysqld.stack 中</span></span><br><span class="line"><span class="meta">$</span><span class="bash"> resolve_stack_dump -s /tmp/mysqld.sym -n /tmp/mysqld.stack</span></span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+
+<p>当解析完毕后，我们可以看到关键部分已经发生了变化，更具体的打印了函数名，而我们又怎能满足于函数名呢？不要求具体列位置，最起码给个行定位吧大哥。</p>
+<p>不要着急，真相就在眼前。</p>
+<figure class="highlight txt"><table><tr><td class="code"><pre><span class="line">03:51:06 UTC - mysqld got signal 11 ;</span><br><span class="line">This could be because you hit a bug. It is also possible that this binary...</span><br><span class="line">Thread pointer: 0x0</span><br><span class="line">Attempting backtrace. You can use the following information to find out</span><br><span class="line">where mysqld died. If you see no messages after this, something went</span><br><span class="line">terribly wrong...</span><br><span class="line">stack_bottom = 0 thread_stack 0x40000</span><br><span class="line">0x8f7eab my_print_stacktrace + 59</span><br><span class="line">0x66d55a handle_fatal_signal + 1178</span><br><span class="line">0x7f6f44fc2390 _end + 1136550664</span><br><span class="line">0x657c4d _ZN9MYSQL_LOG17generate_new_nameEPcPKc + 157</span><br><span class="line">0x657d07 _ZN9MYSQL_LOG26init_and_set_log_file_nameEPKcS1_13enum_log_type10cache_type + 87</span><br><span class="line">0x89a22b _ZN13MYSQL_BIN_LOG11open_binlogEPKcS1_10cache_typembbbbP28Format_description_log_event + 123</span><br><span class="line">0x5acbfb _Z11mysqld_mainiPPc + 7083</span><br><span class="line">0x7f6f44366830 _end + 1123592104</span><br><span class="line">0x59e659 _start + 41</span><br></pre></td></tr></table></figure>
+
+<p>我们只需要稍稍改动上面的命令，就好了</p>
+<blockquote>
+<p>resolve_stack_dump -s /tmp/mysqld.sym -n /tmp/mysqld.stack | c++filt</p>
+</blockquote>
+<figure class="highlight txt"><table><tr><td class="code"><pre><span class="line">Thread pointer: 0x0</span><br><span class="line">Attempting backtrace. You can use the following information to find out</span><br><span class="line">where mysqld died. If you see no messages after this, something went</span><br><span class="line">terribly wrong...</span><br><span class="line">stack_bottom = 0 thread_stack 0x40000</span><br><span class="line">0x8f7eab my_print_stacktrace + 59</span><br><span class="line">0x66d55a handle_fatal_signal + 1178</span><br><span class="line">0x7f6f44fc2390 _end + 1136550664</span><br><span class="line">0x657c4d MYSQL_LOG::generate_new_name(char*, char const*) + 157</span><br><span class="line">0x657d07 MYSQL_LOG::init_and_set_log_file_name(char const*, char const*, enum_log_type, cache_type) + 87</span><br><span class="line">0x89a22b MYSQL_BIN_LOG::open_binlog(char const*, char const*, cache_type, unsigned long, bool, bool, bool, bool, Format_description_log_event*) + 123</span><br><span class="line">0x5acbfb mysqld_main(int, char**) + 7083</span><br><span class="line">0x7f6f44366830 _end + 1123592104</span><br><span class="line">0x59e659 _start + 41</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<h2 id="3-怎么定位这个锤儿-bug-呦"><a href="#3-怎么定位这个锤儿-bug-呦" class="headerlink" title="3. 怎么定位这个锤儿 bug 呦"></a>3. 怎么定位这个锤儿 bug 呦</h2><p>从这个报错来看，在启动过程中，要打开 binlog 文件，而在打开文件过程中失败了。这种报错 99.9% 都是文件系统问题，而 99% 可能是文件系统磁盘空间满了，可以通过一些命令去排查：</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line"><span class="meta">$</span><span class="bash"> df -Pih</span></span><br><span class="line">文件系统       Inode 已用(I) 可用(I) 已用(I)% 挂载点</span><br><span class="line">udev            2.5M     582    2.5M       1% /dev</span><br><span class="line">tmpfs           2.5M    1.2K    2.5M       1% /run</span><br><span class="line">/dev/nvme0n1p2   15M    1.8M     14M      12% /</span><br><span class="line">...</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<h2 id="4-最重要的事儿"><a href="#4-最重要的事儿" class="headerlink" title="4. 最重要的事儿"></a>4. 最重要的事儿</h2><p>想必大家都听说过南辕北辙的故事，大概就是要往一边去，然后，从相反的方向出发。而判断 bug 到底出在哪里更是如此，我们一定要选对路，一直走到头。</p>
+<p>那么，无论你是否能够坚持，选对路很重要，毕竟，rootcause 可能就在路口等你。</p>
+<p>对于这次 debug ，选对路就是选对 mysqld 版本。记得，一定要用报错的 mysqld 去分析问题。否则，就是南辕北辙。毕竟，谁能准确记得每个不同小版本之间，bug info 涉及的代码没有被人修改呢？</p>
+]]></content>
+      <categories>
+        <category>DataBase</category>
+      </categories>
+      <tags>
+        <tag>MySQL</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>如何编译安装MySQL Server</title>
+    <url>/2020/06/13/%E5%A6%82%E4%BD%95%E7%BC%96%E8%AF%91%E5%AE%89%E8%A3%85MySQL-Server/</url>
+    <content><![CDATA[<p>众所周知，<a href="https://www.mysql.com/">MySQL</a>依然是<a href="https://db-engines.com/en/ranking">最流行的开源数据库</a>没有之一。那么如何使用他，如何揭开他流行的奥秘呢？这一切的一切可能要从最基础的编译安装开始说起。</p>
+<a id="more"></a>
+
+<h2 id="1-编译-release-版本"><a href="#1-编译-release-版本" class="headerlink" title="1. 编译 release 版本"></a>1. 编译 release 版本</h2><figure class="highlight shell"><table><tr><td class="code"><pre><span class="line"><span class="meta">$</span><span class="bash"> git <span class="built_in">clone</span> https://github.com/TCeason/tokudb.git mysql</span></span><br><span class="line"><span class="meta">$</span><span class="bash"> <span class="built_in">cd</span> mysql</span></span><br><span class="line"><span class="meta">$</span><span class="bash"> git checkout releases-tags</span></span><br><span class="line"><span class="meta">$</span><span class="bash"> git submodule init</span></span><br><span class="line"><span class="meta">$</span><span class="bash"> git submodule update</span></span><br><span class="line"><span class="meta">$</span><span class="bash"> mkdir build; <span class="built_in">cd</span> build</span></span><br><span class="line"><span class="meta">$</span><span class="bash"> cmake ..\</span></span><br><span class="line">  -DCMAKE_BUILD_TYPE=RelWithDebInfo\</span><br><span class="line">  -DBUILD_CONFIG=mysql_release\</span><br><span class="line">  -DFEATURE_SET=community\</span><br><span class="line">  -DWITH_EMBEDDED_SERVER=OFF\</span><br><span class="line">  -DTOKUDB_VERSION=7.5.6\</span><br><span class="line">  -DBUILD_TESTING=OFF\</span><br><span class="line">  -DWITHOUT_ROCKSDB=ON\</span><br><span class="line">  -DWITH_BOOST=../extra/boost/boost_1_59_0.tar.gz\</span><br><span class="line">  -DCOMPILATION_COMMENT=&quot;Study MySQL build $(date +%Y%m%d.%H%M%S.$(git rev-parse --short HEAD))&quot;\</span><br><span class="line">  -DCMAKE_INSTALL_PREFIX=  # MySQL basedir 路径</span><br><span class="line"><span class="meta">  #</span><span class="bash"> cmake 的时候，如果没有依赖项需要自行安装</span></span><br><span class="line"><span class="meta">$</span><span class="bash"> make -jn <span class="comment"># n的数量取决于 CPU Core 数，如果 make -j报错，尝试 make</span></span></span><br><span class="line"><span class="meta">$</span><span class="bash"> make install</span></span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<h2 id="2-编译-Debug-版本"><a href="#2-编译-Debug-版本" class="headerlink" title="2. 编译 Debug 版本"></a>2. 编译 Debug 版本</h2><figure class="highlight shell"><table><tr><td class="code"><pre><span class="line"><span class="meta">$</span><span class="bash"> git <span class="built_in">clone</span> https://github.com/TCeason/tokudb.git mysql</span></span><br><span class="line"><span class="meta">$</span><span class="bash"> <span class="built_in">cd</span> mysql</span></span><br><span class="line"><span class="meta">$</span><span class="bash"> git checkout releases-tags</span></span><br><span class="line"><span class="meta">$</span><span class="bash"> git submodule init</span></span><br><span class="line"><span class="meta">$</span><span class="bash"> git submodule update</span></span><br><span class="line"><span class="meta">$</span><span class="bash"> mkdir build</span></span><br><span class="line"><span class="meta">$</span><span class="bash"> <span class="built_in">cd</span> build</span></span><br><span class="line"><span class="meta">$</span><span class="bash"> cmake ..\</span></span><br><span class="line">  -DCMAKE_BUILD_TYPE=Debug\</span><br><span class="line">  -DBUILD_CONFIG=mysql_release\</span><br><span class="line">  -DFEATURE_SET=community\</span><br><span class="line">  -DWITH_EMBEDDED_SERVER=OFF\</span><br><span class="line">  -DTOKUDB_VERSION=7.5.6\</span><br><span class="line">  -DBUILD_TESTING=OFF\</span><br><span class="line">  -DWITHOUT_ROCKSDB=ON\</span><br><span class="line">  -DWITH_BOOST=../extra/boost/boost_1_59_0.tar.gz\</span><br><span class="line">  -DCMAKE_INSTALL_PREFIX=  # MySQL basedir 路径</span><br><span class="line"><span class="meta">$</span><span class="bash"> make -jn <span class="comment"># n的数量取决于 CPU Core 数，如果 make -j报错，尝试 make</span></span></span><br><span class="line"><span class="meta">$</span><span class="bash"> make install</span></span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p>随着 MySQL 版本的不断更新，编译参数可能会发生变动，当出现一些问题时，还是需要参考下面的信息：</p>
+<p><a href="https://dev.mysql.com/doc/refman/8.0/en/installing.html">https://dev.mysql.com/doc/refman/8.0/en/installing.html</a></p>
+<p><a href="https://github.com/TCeason/tokudb">https://github.com/TCeason/tokudb</a></p>
+<p><a href="https://github.com/XeLabs/tokudb/wiki">https://github.com/XeLabs/tokudb/wiki</a></p>
+<p>如果有对于 Percona Server Backport 感兴趣的朋友，欢迎讨论。</p>
+]]></content>
+      <categories>
+        <category>DataBase</category>
+      </categories>
+      <tags>
+        <tag>MySQL</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>空有 MySQL Server 如何成为高玩</title>
+    <url>/2020/06/13/%E7%A9%BA%E6%9C%89-MySQL-Server-%E5%A6%82%E4%BD%95%E6%88%90%E4%B8%BA%E9%AB%98%E7%8E%A9/</url>
+    <content><![CDATA[<p>通过 <a href="/2020/06/13/%E5%A6%82%E4%BD%95%E7%BC%96%E8%AF%91%E5%AE%89%E8%A3%85MySQL-Server/" title="如何编译安装MySQL-Server">如何编译安装MySQL-Server</a>，我们终于了解了如何进行对 MySQL Server 进行编译安装。那么如何进一步了解成为真正的 MySQL ”高玩“ 呢？</p>
+<a id="more"></a>
+
+<p>这个问题，我相信，网络上有很多答案。但是，我认为，真相只有一个～，自己动手编译 debug 版本，然后，进行 gdb 来判断。你可能觉得，这样的方式过于”老土“，而且非常不友好，毕竟还要掌握gdb，多一种学习路径，对于初入者的难度无疑是几何级增长。</p>
+<p>没关系，MySQL 提供了一个贴心的功能，可以让我们通过类似阅读日志的方式读一下 Server 和 Client 到底在做什么。</p>
+<blockquote>
+<p>注意： </p>
+<ol>
+<li><p>接下来的方法一定要在编译 <code>debug</code> 版本后在进行使用哦。<br>接下来的方法一定要在编译 <code>debug</code> 版本后在进行使用哦。<br>接下来的方法一定要在编译 <code>debug</code> 版本后在进行使用哦。<br>重要的事情说三遍，嘻嘻。 </p>
+</li>
+<li><p>需要自行将编译好的 MySQL binary 包加入到使用主机的<code>PATH</code>变量中。</p>
+</li>
+</ol>
+</blockquote>
+<h2 id="1-debug-mysqld"><a href="#1-debug-mysqld" class="headerlink" title="1. debug: mysqld"></a>1. debug: mysqld</h2><figure class="highlight shell"><table><tr><td class="code"><pre><span class="line"><span class="meta">#</span><span class="bash"> Session1: </span></span><br><span class="line"><span class="meta">$</span><span class="bash"> mysqld-debug --initialize-insecure --debug=d,info,error,query,general,<span class="built_in">where</span>:O,/tmp/mysqld.trace</span></span><br><span class="line"><span class="meta">#</span><span class="bash"> Session2:</span></span><br><span class="line"><span class="meta">$</span><span class="bash"> tail -f /tmp/mysqld.trace</span></span><br></pre></td></tr></table></figure>
+
+<p><strong>Note:</strong> 不做任何 defaults-file 设置的话，datadir 位于 $basedir/data</p>
+<h2 id="2-debug-mysql-client"><a href="#2-debug-mysql-client" class="headerlink" title="2. debug: mysql client"></a>2. debug: mysql client</h2><figure class="highlight shell"><table><tr><td class="code"><pre><span class="line"><span class="meta">#</span><span class="bash"> Session1:</span></span><br><span class="line"><span class="meta">$</span><span class="bash"> mysql -uusername --debug=d:t:O,/tmp/client.trace</span></span><br><span class="line"><span class="meta">#</span><span class="bash"> Session2:</span></span><br><span class="line"><span class="meta">$</span><span class="bash">tail -f /tmp/client.trace</span></span><br></pre></td></tr></table></figure>
+
+<p>加油吧少年，欢乐时光开始啦。（手动滑稽）</p>
+<p>如果还是有些许不明白可以参考官方链接，不过个人建议还是先折磨一下自己哦</p>
+<p><a href="https://dev.mysql.com/doc/refman/8.0/en/porting.html">https://dev.mysql.com/doc/refman/8.0/en/porting.html</a></p>
+]]></content>
+      <categories>
+        <category>DataBase</category>
+      </categories>
+      <tags>
+        <tag>MySQL</tag>
+      </tags>
+  </entry>
+</search>

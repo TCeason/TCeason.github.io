@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+  <title>Eason&#39;s blog</title>
+  <icon>http://tceason.github.io/icon.png</icon>
+  <subtitle>空杯心态</subtitle>
+  <link href="/atom.xml" rel="self"/>
+  
+  <link href="http://tceason.github.io/"/>
+  <updated>2020-11-15T08:48:38.241Z</updated>
+  <id>http://tceason.github.io/</id>
+  
+  <author>
+    <name>Eason</name>
+    
+  </author>
+  
+  <generator uri="https://hexo.io/">Hexo</generator>
+  
+  <entry>
+    <title>mysqldump 源码分析</title>
+    <link href="http://tceason.github.io/2020/11/15/mysqldump-%E5%88%86%E6%9E%90/"/>
+    <id>http://tceason.github.io/2020/11/15/mysqldump-%E5%88%86%E6%9E%90/</id>
+    <published>2020-11-15T08:20:47.000Z</published>
+    <updated>2020-11-15T08:48:38.241Z</updated>
+    
+    <summary type="html">
+    
+      &lt;h2 id=&quot;1-前言&quot;&gt;&lt;a href=&quot;#1-前言&quot; class=&quot;headerlink&quot; title=&quot;1. 前言&quot;&gt;&lt;/a&gt;1. 前言&lt;/h2&gt;&lt;p&gt;mysqldump 作为 MySQL 源生支持的逻辑复制工具自从上古时代就已经被DBA广泛使用，时至今日，很多人都依然在用他作为轻量级数据库的备份工具。&lt;/p&gt;
+&lt;p&gt;虽然在 MySQL 复制工具中 mysqldump 具有 OG 地位，但是不可否认在当代社会，&lt;code&gt;单线程复制&lt;/code&gt;，&lt;code&gt;逻辑导出&lt;/code&gt;完全无法 cover 大部分的备份需求场景，比如对于近TB级别的数据如果用mysqldump导出并不落盘的直接写入到其他节点中，可能要以天为时间计量单位去计算一次恢复耗时。试问，谁能忍受我们常用的网站突然某一天弹出一个提示框：&lt;code&gt;今天网站数据迁移，请后天进行访问。&lt;/code&gt; &lt;/p&gt;
+&lt;p&gt;而今天本着对时代的缅怀，我想再好好看看 &lt;code&gt;mysqldump&lt;/code&gt; 是如何实现的。而快速了解基本实现逻辑，最好的莫过于从他刚刚出生不久时候开始。接下来，我们穿越回上古，看看他年轻时候的样子吧。&lt;/p&gt;
+    
+    </summary>
+    
+    
+      <category term="DataBase" scheme="http://tceason.github.io/categories/DataBase/"/>
+    
+    
+      <category term="MySQL" scheme="http://tceason.github.io/tags/MySQL/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>天啊我的 MySQL 出 bug 了</title>
+    <link href="http://tceason.github.io/2020/06/13/%E5%A4%A9%E5%95%8A%E6%88%91%E7%9A%84-MySQL-%E5%87%BA-bug-%E4%BA%86/"/>
+    <id>http://tceason.github.io/2020/06/13/%E5%A4%A9%E5%95%8A%E6%88%91%E7%9A%84-MySQL-%E5%87%BA-bug-%E4%BA%86/</id>
+    <published>2020-06-13T08:52:40.000Z</published>
+    <updated>2020-11-15T08:48:38.241Z</updated>
+    
+    <summary type="html">
+    
+      &lt;p&gt;有这么一天，我们吃着火锅，唱着歌，突然就被手机铃声给劫了。一接电话&lt;/p&gt;
+&lt;p&gt;问曰：咋回事捏？&lt;/p&gt;
+&lt;p&gt;骂曰：看看你这破数据库，error log 里面居然有 bug 信息。赶紧回来，不然别想混了！！！&lt;/p&gt;
+&lt;p&gt;得，骑上我心爱的小毛驴飞过去处理吧。&lt;/p&gt;
+    
+    </summary>
+    
+    
+      <category term="DataBase" scheme="http://tceason.github.io/categories/DataBase/"/>
+    
+    
+      <category term="MySQL" scheme="http://tceason.github.io/tags/MySQL/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>空有 MySQL Server 如何成为高玩</title>
+    <link href="http://tceason.github.io/2020/06/13/%E7%A9%BA%E6%9C%89-MySQL-Server-%E5%A6%82%E4%BD%95%E6%88%90%E4%B8%BA%E9%AB%98%E7%8E%A9/"/>
+    <id>http://tceason.github.io/2020/06/13/%E7%A9%BA%E6%9C%89-MySQL-Server-%E5%A6%82%E4%BD%95%E6%88%90%E4%B8%BA%E9%AB%98%E7%8E%A9/</id>
+    <published>2020-06-13T08:26:24.000Z</published>
+    <updated>2020-11-15T08:48:38.241Z</updated>
+    
+    <summary type="html">
+    
+      &lt;p&gt;通过 &lt;a href=&quot;/2020/06/13/%E5%A6%82%E4%BD%95%E7%BC%96%E8%AF%91%E5%AE%89%E8%A3%85MySQL-Server/&quot; title=&quot;如何编译安装MySQL-Server&quot;&gt;如何编译安装MySQL-Server&lt;/a&gt;，我们终于了解了如何进行对 MySQL Server 进行编译安装。那么如何进一步了解成为真正的 MySQL ”高玩“ 呢？&lt;/p&gt;
+    
+    </summary>
+    
+    
+      <category term="DataBase" scheme="http://tceason.github.io/categories/DataBase/"/>
+    
+    
+      <category term="MySQL" scheme="http://tceason.github.io/tags/MySQL/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>如何编译安装MySQL Server</title>
+    <link href="http://tceason.github.io/2020/06/13/%E5%A6%82%E4%BD%95%E7%BC%96%E8%AF%91%E5%AE%89%E8%A3%85MySQL-Server/"/>
+    <id>http://tceason.github.io/2020/06/13/%E5%A6%82%E4%BD%95%E7%BC%96%E8%AF%91%E5%AE%89%E8%A3%85MySQL-Server/</id>
+    <published>2020-06-13T08:20:47.000Z</published>
+    <updated>2020-11-15T08:48:38.241Z</updated>
+    
+    <summary type="html">
+    
+      &lt;p&gt;众所周知，&lt;a href=&quot;https://www.mysql.com/&quot;&gt;MySQL&lt;/a&gt;依然是&lt;a href=&quot;https://db-engines.com/en/ranking&quot;&gt;最流行的开源数据库&lt;/a&gt;没有之一。那么如何使用他，如何揭开他流行的奥秘呢？这一切的一切可能要从最基础的编译安装开始说起。&lt;/p&gt;
+    
+    </summary>
+    
+    
+      <category term="DataBase" scheme="http://tceason.github.io/categories/DataBase/"/>
+    
+    
+      <category term="MySQL" scheme="http://tceason.github.io/tags/MySQL/"/>
+    
+  </entry>
+  
+</feed>
