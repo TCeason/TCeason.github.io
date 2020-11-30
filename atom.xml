@@ -6,7 +6,7 @@
   <link href="/atom.xml" rel="self"/>
   
   <link href="http://tceason.github.io/"/>
-  <updated>2020-11-15T09:03:29.446Z</updated>
+  <updated>2020-11-30T11:15:25.579Z</updated>
   <id>http://tceason.github.io/</id>
   
   <author>
@@ -15,6 +15,30 @@
   </author>
   
   <generator uri="https://hexo.io/">Hexo</generator>
+  
+  <entry>
+    <title>ClickHouse OOM 情况</title>
+    <link href="http://tceason.github.io/2020/11/30/ClickHouse-OOM-%E5%88%86%E6%9E%90/"/>
+    <id>http://tceason.github.io/2020/11/30/ClickHouse-OOM-%E5%88%86%E6%9E%90/</id>
+    <published>2020-11-30T11:20:47.000Z</published>
+    <updated>2020-11-30T11:15:25.579Z</updated>
+    
+    <summary type="html">
+    
+      &lt;h2 id=&quot;1-前言&quot;&gt;&lt;a href=&quot;#1-前言&quot; class=&quot;headerlink&quot; title=&quot;1. 前言&quot;&gt;&lt;/a&gt;1. 前言&lt;/h2&gt;&lt;p&gt;Out Of Memory （OOM）到目前为止已经出现了 40 年。大概就是当某个应用想要使用的内存超过了现有可用的内存总和，本文将不会具体进行赘述。为了防止发生OOM ，采取了各种各样的方式，最常见的就是，当申请内存时，发现无法申请所需要的内存，系统主动 &lt;code&gt;kill&lt;/code&gt; 当前内存占用最大的应用。&lt;/p&gt;
+&lt;p&gt;这样带来的好处是，当前应用可以正常使用了。但是，缺点也是显而易见的：会让当前最大内存占用的应用无法正常运行。&lt;/p&gt;
+&lt;p&gt;在数据库中，这尤为常见。比如，在一台数据库服务器中运行了  MySQL Server ，同时要对这个数据库进行备份，而执行 mysqldump 或者 xtrabackup 或者 mydumper 等等备份命令时，由于机器内存不足以运行备份命令，而 &lt;code&gt;kill&lt;/code&gt; 掉了内存占用最大的 &lt;code&gt;MySQL Server&lt;/code&gt;。着带来的后果就很直接了，业务读写失败。&lt;/p&gt;
+&lt;p&gt;同样的，当下的 OLAP 骄子 &lt;code&gt;ClickHouse&lt;/code&gt; 也是存在这种问题，那么他的 OOM 一般是如何引起的呢，又要如何避免呢？&lt;/p&gt;
+    
+    </summary>
+    
+    
+      <category term="DataBase" scheme="http://tceason.github.io/categories/DataBase/"/>
+    
+    
+      <category term="ClickHouse" scheme="http://tceason.github.io/tags/ClickHouse/"/>
+    
+  </entry>
   
   <entry>
     <title>mysqldump 源码分析</title>

@@ -198,6 +198,101 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://tceason.github.io/2020/11/30/ClickHouse-OOM-%E5%88%86%E6%9E%90/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/header.jpeg">
+      <meta itemprop="name" content="Eason">
+      <meta itemprop="description" content="">
+    </span>
+
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Eason's blog">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2020/11/30/ClickHouse-OOM-%E5%88%86%E6%9E%90/" class="post-title-link" itemprop="url">ClickHouse OOM 情况</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2020-11-30 19:20:47 / 修改时间：19:15:25" itemprop="dateCreated datePublished" datetime="2020-11-30T19:20:47+08:00">2020-11-30</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/DataBase/" itemprop="url" rel="index"><span itemprop="name">DataBase</span></a>
+                </span>
+            </span>
+
+          
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="far fa-file-word"></i>
+              </span>
+              <span>2.6k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="far fa-clock"></i>
+              </span>
+              <span>2 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <h2 id="1-前言"><a href="#1-前言" class="headerlink" title="1. 前言"></a>1. 前言</h2><p>Out Of Memory （OOM）到目前为止已经出现了 40 年。大概就是当某个应用想要使用的内存超过了现有可用的内存总和，本文将不会具体进行赘述。为了防止发生OOM ，采取了各种各样的方式，最常见的就是，当申请内存时，发现无法申请所需要的内存，系统主动 <code>kill</code> 当前内存占用最大的应用。</p>
+<p>这样带来的好处是，当前应用可以正常使用了。但是，缺点也是显而易见的：会让当前最大内存占用的应用无法正常运行。</p>
+<p>在数据库中，这尤为常见。比如，在一台数据库服务器中运行了  MySQL Server ，同时要对这个数据库进行备份，而执行 mysqldump 或者 xtrabackup 或者 mydumper 等等备份命令时，由于机器内存不足以运行备份命令，而 <code>kill</code> 掉了内存占用最大的 <code>MySQL Server</code>。着带来的后果就很直接了，业务读写失败。</p>
+<p>同样的，当下的 OLAP 骄子 <code>ClickHouse</code> 也是存在这种问题，那么他的 OOM 一般是如何引起的呢，又要如何避免呢？</p>
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/2020/11/30/ClickHouse-OOM-%E5%88%86%E6%9E%90/#more" rel="contents">
+                阅读全文 &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
+      
+    </div>
+
+    
+    
+    
+
+	<div>
+        
+    </div>
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
     <link itemprop="mainEntityOfPage" href="http://tceason.github.io/2020/11/15/mysqldump-%E5%88%86%E6%9E%90/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -653,7 +748,7 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">4</span>
+          <span class="site-state-item-count">5</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
@@ -666,7 +761,7 @@
       <div class="site-state-item site-state-tags">
             <a href="/tags/">
           
-        <span class="site-state-item-count">1</span>
+        <span class="site-state-item-count">2</span>
         <span class="site-state-item-name">标签</span></a>
       </div>
   </nav>
