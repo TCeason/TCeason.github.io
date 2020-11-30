@@ -23,13 +23,13 @@
 
   <meta name="description" content="1. 前言Out Of Memory （OOM）到目前为止已经出现了 40 年。大概就是当某个应用想要使用的内存超过了现有可用的内存总和，本文将不会具体进行赘述。为了防止发生OOM ，采取了各种各样的方式，最常见的就是，当申请内存时，发现无法申请所需要的内存，系统主动 kill 当前内存占用最大的应用。 这样带来的好处是，当前应用可以正常使用了。但是，缺点也是显而易见的：会让当前最大内存占用的应用">
 <meta property="og:type" content="article">
-<meta property="og:title" content="ClickHouse OOM 情况">
+<meta property="og:title" content="ClickHouse OOM 分析">
 <meta property="og:url" content="http://tceason.github.io/2020/11/30/ClickHouse-OOM-%E5%88%86%E6%9E%90/index.html">
 <meta property="og:site_name" content="Eason&#39;s blog">
 <meta property="og:description" content="1. 前言Out Of Memory （OOM）到目前为止已经出现了 40 年。大概就是当某个应用想要使用的内存超过了现有可用的内存总和，本文将不会具体进行赘述。为了防止发生OOM ，采取了各种各样的方式，最常见的就是，当申请内存时，发现无法申请所需要的内存，系统主动 kill 当前内存占用最大的应用。 这样带来的好处是，当前应用可以正常使用了。但是，缺点也是显而易见的：会让当前最大内存占用的应用">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2020-11-30T11:20:47.000Z">
-<meta property="article:modified_time" content="2020-11-30T11:15:25.579Z">
+<meta property="article:modified_time" content="2020-11-30T11:17:25.509Z">
 <meta property="article:author" content="Eason">
 <meta property="article:tag" content="ClickHouse">
 <meta name="twitter:card" content="summary">
@@ -47,7 +47,7 @@
   };
 </script>
 
-  <title>ClickHouse OOM 情况 | Eason's blog</title>
+  <title>ClickHouse OOM 分析 | Eason's blog</title>
   
 
 
@@ -218,7 +218,7 @@
     </span>
       <header class="post-header">
         <h1 class="post-title" itemprop="name headline">
-          ClickHouse OOM 情况
+          ClickHouse OOM 分析
         </h1>
 
         <div class="post-meta">
@@ -229,7 +229,7 @@
               <span class="post-meta-item-text">发表于</span>
               
 
-              <time title="创建时间：2020-11-30 19:20:47 / 修改时间：19:15:25" itemprop="dateCreated datePublished" datetime="2020-11-30T19:20:47+08:00">2020-11-30</time>
+              <time title="创建时间：2020-11-30 19:20:47 / 修改时间：19:17:25" itemprop="dateCreated datePublished" datetime="2020-11-30T19:20:47+08:00">2020-11-30</time>
             </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">

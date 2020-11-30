@@ -188,7 +188,7 @@
       </tags>
   </entry>
   <entry>
-    <title>ClickHouse OOM 情况</title>
+    <title>ClickHouse OOM 分析</title>
     <url>/2020/11/30/ClickHouse-OOM-%E5%88%86%E6%9E%90/</url>
     <content><![CDATA[<h2 id="1-前言"><a href="#1-前言" class="headerlink" title="1. 前言"></a>1. 前言</h2><p>Out Of Memory （OOM）到目前为止已经出现了 40 年。大概就是当某个应用想要使用的内存超过了现有可用的内存总和，本文将不会具体进行赘述。为了防止发生OOM ，采取了各种各样的方式，最常见的就是，当申请内存时，发现无法申请所需要的内存，系统主动 <code>kill</code> 当前内存占用最大的应用。</p>
 <p>这样带来的好处是，当前应用可以正常使用了。但是，缺点也是显而易见的：会让当前最大内存占用的应用无法正常运行。</p>
