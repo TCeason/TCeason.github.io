@@ -21,20 +21,20 @@
     var CONFIG = {"hostname":"tceason.github.io","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":false,"style":"default"},"back2top":{"enable":true,"sidebar":true,"scrollpercent":false},"bookmark":{"enable":true,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
   </script>
 
-  <meta name="description" content="众所周知，MySQL依然是最流行的开源数据库没有之一。那么如何使用他，如何揭开他流行的奥秘呢？这一切的一切可能要从最基础的编译安装开始说起。">
+  <meta name="description" content="HashTable 是一种存储 key-value pairs（键值对）的数据结构。 Key 是被发送到一个用来对其实行运算的 hash 函数。 这个过程称为 Hashing（散列） 1hash 函数运算后的结果（通常被称为 &#96;hash 值&#96; 或者 hash）是 key-value pair 在 HashTable 中的索引。">
 <meta property="og:type" content="article">
-<meta property="og:title" content="如何编译安装MySQL Server">
-<meta property="og:url" content="http://tceason.github.io/2020/06/13/%E5%A6%82%E4%BD%95%E7%BC%96%E8%AF%91%E5%AE%89%E8%A3%85MySQL-Server/index.html">
+<meta property="og:title" content="什么是 HashTable">
+<meta property="og:url" content="http://tceason.github.io/2021/06/21/%E4%BB%80%E4%B9%88%E6%98%AF-HashTable/index.html">
 <meta property="og:site_name" content="Eason&#39;s blog">
-<meta property="og:description" content="众所周知，MySQL依然是最流行的开源数据库没有之一。那么如何使用他，如何揭开他流行的奥秘呢？这一切的一切可能要从最基础的编译安装开始说起。">
+<meta property="og:description" content="HashTable 是一种存储 key-value pairs（键值对）的数据结构。 Key 是被发送到一个用来对其实行运算的 hash 函数。 这个过程称为 Hashing（散列） 1hash 函数运算后的结果（通常被称为 &#96;hash 值&#96; 或者 hash）是 key-value pair 在 HashTable 中的索引。">
 <meta property="og:locale" content="zh_CN">
-<meta property="article:published_time" content="2020-06-13T08:20:47.000Z">
-<meta property="article:modified_time" content="2020-11-15T08:48:38.241Z">
+<meta property="article:published_time" content="2021-06-21T10:45:03.000Z">
+<meta property="article:modified_time" content="2021-06-21T08:49:22.294Z">
 <meta property="article:author" content="Eason">
-<meta property="article:tag" content="MySQL">
+<meta property="article:tag" content="HashTable">
 <meta name="twitter:card" content="summary">
 
-<link rel="canonical" href="http://tceason.github.io/2020/06/13/%E5%A6%82%E4%BD%95%E7%BC%96%E8%AF%91%E5%AE%89%E8%A3%85MySQL-Server/">
+<link rel="canonical" href="http://tceason.github.io/2021/06/21/%E4%BB%80%E4%B9%88%E6%98%AF-HashTable/">
 
 
 <script id="page-configurations">
@@ -47,7 +47,7 @@
   };
 </script>
 
-  <title>如何编译安装MySQL Server | Eason's blog</title>
+  <title>什么是 HashTable | Eason's blog</title>
   
 
 
@@ -204,7 +204,7 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://tceason.github.io/2020/06/13/%E5%A6%82%E4%BD%95%E7%BC%96%E8%AF%91%E5%AE%89%E8%A3%85MySQL-Server/">
+    <link itemprop="mainEntityOfPage" href="http://tceason.github.io/2021/06/21/%E4%BB%80%E4%B9%88%E6%98%AF-HashTable/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="image" content="/images/header.jpeg">
@@ -218,7 +218,7 @@
     </span>
       <header class="post-header">
         <h1 class="post-title" itemprop="name headline">
-          如何编译安装MySQL Server
+          什么是 HashTable
         </h1>
 
         <div class="post-meta">
@@ -227,23 +227,17 @@
                 <i class="far fa-calendar"></i>
               </span>
               <span class="post-meta-item-text">发表于</span>
+              
 
-              <time title="创建时间：2020-06-13 16:20:47" itemprop="dateCreated datePublished" datetime="2020-06-13T16:20:47+08:00">2020-06-13</time>
+              <time title="创建时间：2021-06-21 18:45:03 / 修改时间：16:49:22" itemprop="dateCreated datePublished" datetime="2021-06-21T18:45:03+08:00">2021-06-21</time>
             </span>
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="far fa-calendar-check"></i>
-                </span>
-                <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2020-11-15 16:48:38" itemprop="dateModified" datetime="2020-11-15T16:48:38+08:00">2020-11-15</time>
-              </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
                 <i class="far fa-folder"></i>
               </span>
               <span class="post-meta-item-text">分类于</span>
                 <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/DataBase/" itemprop="url" rel="index"><span itemprop="name">DataBase</span></a>
+                  <a href="/categories/DataStructures/" itemprop="url" rel="index"><span itemprop="name">DataStructures</span></a>
                 </span>
             </span>
 
@@ -259,13 +253,13 @@
               <span class="post-meta-item-icon">
                 <i class="far fa-file-word"></i>
               </span>
-              <span></span>
+              <span>2.2k</span>
             </span>
             <span class="post-meta-item" title="阅读时长">
               <span class="post-meta-item-icon">
                 <i class="far fa-clock"></i>
               </span>
-              <span>NaN:aN</span>
+              <span>2 分钟</span>
             </span>
 
         </div>
@@ -277,18 +271,34 @@
     <div class="post-body" itemprop="articleBody">
 
       
-        <p>众所周知，<a href="https://www.mysql.com/" target="_blank" rel="noopener">MySQL</a>依然是<a href="https://db-engines.com/en/ranking" target="_blank" rel="noopener">最流行的开源数据库</a>没有之一。那么如何使用他，如何揭开他流行的奥秘呢？这一切的一切可能要从最基础的编译安装开始说起。</p>
+        <p>HashTable 是一种存储 key-value pairs（键值对）的数据结构。</p>
+<p>Key 是被发送到一个用来对其实行运算的 hash 函数。</p>
+<p>这个过程称为 Hashing（散列）</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">hash 函数运算后的结果（通常被称为 &#96;hash 值&#96; 或者 hash）是 key-value pair 在 HashTable 中的索引。</span><br></pre></td></tr></table></figure>
+
 <a id="more"></a>
 
-<h2 id="1-编译-release-版本"><a href="#1-编译-release-版本" class="headerlink" title="1. 编译 release 版本"></a>1. 编译 release 版本</h2><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">$</span><span class="bash"> git <span class="built_in">clone</span> https://github.com/TCeason/tokudb.git mysql</span></span><br><span class="line"><span class="meta">$</span><span class="bash"> <span class="built_in">cd</span> mysql</span></span><br><span class="line"><span class="meta">$</span><span class="bash"> git checkout releases-tags</span></span><br><span class="line"><span class="meta">$</span><span class="bash"> git submodule init</span></span><br><span class="line"><span class="meta">$</span><span class="bash"> git submodule update</span></span><br><span class="line"><span class="meta">$</span><span class="bash"> mkdir build; <span class="built_in">cd</span> build</span></span><br><span class="line"><span class="meta">$</span><span class="bash"> cmake ..\</span></span><br><span class="line">  -DCMAKE_BUILD_TYPE=RelWithDebInfo\</span><br><span class="line">  -DBUILD_CONFIG=mysql_release\</span><br><span class="line">  -DFEATURE_SET=community\</span><br><span class="line">  -DWITH_EMBEDDED_SERVER=OFF\</span><br><span class="line">  -DTOKUDB_VERSION=7.5.6\</span><br><span class="line">  -DBUILD_TESTING=OFF\</span><br><span class="line">  -DWITHOUT_ROCKSDB=ON\</span><br><span class="line">  -DWITH_BOOST=../extra/boost/boost_1_59_0.tar.gz\</span><br><span class="line">  -DCOMPILATION_COMMENT=&quot;Study MySQL build $(date +%Y%m%d.%H%M%S.$(git rev-parse --short HEAD))&quot;\</span><br><span class="line">  -DCMAKE_INSTALL_PREFIX=  # MySQL basedir 路径</span><br><span class="line"><span class="meta">  #</span><span class="bash"> cmake 的时候，如果没有依赖项需要自行安装</span></span><br><span class="line"><span class="meta">$</span><span class="bash"> make -jn <span class="comment"># n的数量取决于 CPU Core 数，如果 make -j报错，尝试 make</span></span></span><br><span class="line"><span class="meta">$</span><span class="bash"> make install</span></span><br><span class="line"></span><br></pre></td></tr></table></figure>
+<h2 id="组成部分"><a href="#组成部分" class="headerlink" title="组成部分"></a>组成部分</h2><p>基本的 HashTable 包括两个部分：</p>
+<h3 id="Hash-Function"><a href="#Hash-Function" class="headerlink" title="Hash Function"></a>Hash Function</h3><p>正如我们上面提到的，hash 函数决定了我们 key-value pair 的索引。选择一个高效的 hash 函数是创建一个好的 HashTable 至关重要的部分。你应该始终确保他是一个单向函数（one-way function）。<br>即，无法从哈希中检索密钥。</p>
+<p>好的的 hash 函数的另一个特性是：对于不同的 key 可以产生不同的 hash。</p>
+<h3 id="Array"><a href="#Array" class="headerlink" title="Array"></a>Array</h3><p>Array 包含 HashTable 中所有 key-value 条目。数组的大小应该根据期望的数据量设置。</p>
+<h2 id="Collisions-in-hash-tables-amp-resolutions"><a href="#Collisions-in-hash-tables-amp-resolutions" class="headerlink" title="Collisions in hash tables &amp; resolutions"></a>Collisions in hash tables &amp; resolutions</h2><p>当两个或者多个 key map（映射）到相同的 index（索引）会发生 collisions（<code>冲突</code>）。有几种处理 index 冲突的方法：</p>
+<h3 id="Liner-probing"><a href="#Liner-probing" class="headerlink" title="Liner probing"></a>Liner probing</h3><p>如果一对 key-value 被分配到一个已经被占用的 slot（插槽），会线性的在当前 HashTable 搜索下一个空闲的插槽。</p>
+<h3 id="Chaining"><a href="#Chaining" class="headerlink" title="Chaining"></a>Chaining</h3><p>HashTable 将会是一个链表数组。map 到同一 index 的所有 key 都将存储为该索引处的链表节点。</p>
+<p>优势：</p>
+<ul>
+<li><p>通过 chaining，在哈希表中的插入总是在 O(1) 中发生，因为链表允许在恒定时间内插入。</p>
+</li>
+<li><p>理论上，只要有足够的空间，链式哈希表就可以无限增长。</p>
+</li>
+<li><p>使用 chaining 的哈希表永远不需要调整大小。</p>
+</li>
+</ul>
+<h3 id="Resizing-the-HashTable"><a href="#Resizing-the-HashTable" class="headerlink" title="Resizing the HashTable"></a>Resizing the HashTable</h3><p>可以增加 HashTable 的大小，以便将 Hash 条目分割的更远。Threshold value（临界点）表示在调整大小之前需要占用的 HashTable 的百分比。HashTable threshold value 为 0.6 表示当 HashTable 空间使用率为 60 % 时进行一次扩容。按照惯例，HashTable 的大小扩容至二倍。这是内存密集型的。</p>
+<h2 id="Implementation"><a href="#Implementation" class="headerlink" title="Implementation"></a>Implementation</h2><p>基于 chaining 实现。</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;iostream&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;list&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="keyword">using</span> <span class="keyword">namespace</span> <span class="built_in">std</span>;</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">HashTable</span> &#123;</span></span><br><span class="line"><span class="keyword">private</span>:</span><br><span class="line">    <span class="built_in">list</span>&lt;<span class="keyword">int</span>&gt; * table;</span><br><span class="line">    <span class="keyword">int</span> total_elements;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">int</span> <span class="title">getHash</span><span class="params">(<span class="keyword">int</span> key)</span></span></span><br><span class="line"><span class="function">    </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> key % total_elements;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span>:</span><br><span class="line">    HashTable(<span class="keyword">int</span> n)</span><br><span class="line">    &#123;</span><br><span class="line">        total_elements = n;</span><br><span class="line">        table = <span class="keyword">new</span> <span class="built_in">list</span>&lt;<span class="keyword">int</span>&gt;[total_elements];</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">void</span> <span class="title">insertElement</span><span class="params">(<span class="keyword">int</span> key)</span></span></span><br><span class="line"><span class="function">    </span>&#123;</span><br><span class="line">        table[getHash(key)].push_back(key);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">void</span> <span class="title">removeElement</span><span class="params">(<span class="keyword">int</span> key)</span></span></span><br><span class="line"><span class="function">    </span>&#123;</span><br><span class="line">        <span class="keyword">int</span> x = getHash(key);</span><br><span class="line">        <span class="built_in">list</span>&lt;<span class="keyword">int</span>&gt;::iterator i;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">for</span> (i = table[x].begin(); i != table[x].end(); i++)</span><br><span class="line">        &#123;</span><br><span class="line">            <span class="keyword">if</span> (*i == key)</span><br><span class="line">                <span class="keyword">break</span>;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> (i != table[x].end())</span><br><span class="line">            table[x].erase(i);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">void</span> <span class="title">printAll</span><span class="params">()</span></span></span><br><span class="line"><span class="function">    </span>&#123;</span><br><span class="line">        <span class="comment">// Traverse each index.</span></span><br><span class="line">        <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; total_elements; i++)</span><br><span class="line">        &#123;</span><br><span class="line">            <span class="built_in">cout</span> &lt;&lt; <span class="string">"Index "</span> &lt;&lt; i &lt;&lt; <span class="string">": "</span>;</span><br><span class="line">            <span class="comment">// Traverse the list at current index.</span></span><br><span class="line">            <span class="keyword">for</span> (<span class="keyword">int</span> j : table[i])</span><br><span class="line">                <span class="built_in">cout</span> &lt;&lt; j &lt;&lt; <span class="string">"=&gt;"</span>;</span><br><span class="line"></span><br><span class="line">            <span class="built_in">cout</span> &lt;&lt; <span class="built_in">endl</span>;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="function">HashTable <span class="title">ht</span><span class="params">(<span class="number">3</span>)</span></span>;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">int</span> arr[] = &#123;<span class="number">2</span>, <span class="number">4</span>, <span class="number">6</span>, <span class="number">8</span>, <span class="number">10</span>&#125;;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; <span class="number">5</span>; i++)</span><br><span class="line">        ht.insertElement(arr[i]);</span><br><span class="line"></span><br><span class="line">    <span class="built_in">cout</span> &lt;&lt; <span class="string">"=== Hash Table ==="</span> &lt;&lt; <span class="built_in">endl</span>;</span><br><span class="line">    ht.printAll();</span><br><span class="line"></span><br><span class="line">    ht.removeElement(<span class="number">4</span>);</span><br><span class="line">    <span class="built_in">cout</span> &lt;&lt; <span class="built_in">endl</span> &lt;&lt; <span class="string">"=== After delete element 4 ==="</span> &lt;&lt; <span class="built_in">endl</span>;</span><br><span class="line">    ht.printAll();</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 
-<h2 id="2-编译-Debug-版本"><a href="#2-编译-Debug-版本" class="headerlink" title="2. 编译 Debug 版本"></a>2. 编译 Debug 版本</h2><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">$</span><span class="bash"> git <span class="built_in">clone</span> https://github.com/TCeason/tokudb.git mysql</span></span><br><span class="line"><span class="meta">$</span><span class="bash"> <span class="built_in">cd</span> mysql</span></span><br><span class="line"><span class="meta">$</span><span class="bash"> git checkout releases-tags</span></span><br><span class="line"><span class="meta">$</span><span class="bash"> git submodule init</span></span><br><span class="line"><span class="meta">$</span><span class="bash"> git submodule update</span></span><br><span class="line"><span class="meta">$</span><span class="bash"> mkdir build</span></span><br><span class="line"><span class="meta">$</span><span class="bash"> <span class="built_in">cd</span> build</span></span><br><span class="line"><span class="meta">$</span><span class="bash"> cmake ..\</span></span><br><span class="line">  -DCMAKE_BUILD_TYPE=Debug\</span><br><span class="line">  -DBUILD_CONFIG=mysql_release\</span><br><span class="line">  -DFEATURE_SET=community\</span><br><span class="line">  -DWITH_EMBEDDED_SERVER=OFF\</span><br><span class="line">  -DTOKUDB_VERSION=7.5.6\</span><br><span class="line">  -DBUILD_TESTING=OFF\</span><br><span class="line">  -DWITHOUT_ROCKSDB=ON\</span><br><span class="line">  -DWITH_BOOST=../extra/boost/boost_1_59_0.tar.gz\</span><br><span class="line">  -DCMAKE_INSTALL_PREFIX=  # MySQL basedir 路径</span><br><span class="line"><span class="meta">$</span><span class="bash"> make -jn <span class="comment"># n的数量取决于 CPU Core 数，如果 make -j报错，尝试 make</span></span></span><br><span class="line"><span class="meta">$</span><span class="bash"> make install</span></span><br><span class="line"></span><br></pre></td></tr></table></figure>
-
-<p>随着 MySQL 版本的不断更新，编译参数可能会发生变动，当出现一些问题时，还是需要参考下面的信息：</p>
-<p><a href="https://dev.mysql.com/doc/refman/8.0/en/installing.html" target="_blank" rel="noopener">https://dev.mysql.com/doc/refman/8.0/en/installing.html</a></p>
-<p><a href="https://github.com/TCeason/tokudb" target="_blank" rel="noopener">https://github.com/TCeason/tokudb</a></p>
-<p><a href="https://github.com/XeLabs/tokudb/wiki" target="_blank" rel="noopener">https://github.com/XeLabs/tokudb/wiki</a></p>
-<p>如果有对于 Percona Server Backport 感兴趣的朋友，欢迎讨论。</p>
+<p>Transate to <a href="https://www.educative.io/edpresso/how-to-implement-a-hash-table-in-cpp" target="_blank" rel="noopener">https://www.educative.io/edpresso/how-to-implement-a-hash-table-in-cpp</a></p>
 
     </div>
 
@@ -334,7 +344,7 @@
 
       <footer class="post-footer">
           <div class="post-tags">
-              <a href="/tags/MySQL/" rel="tag"># MySQL</a>
+              <a href="/tags/HashTable/" rel="tag"># HashTable</a>
           </div>
 
         
@@ -342,11 +352,11 @@
 
         
     <div class="post-nav">
-      <div class="post-nav-item"></div>
       <div class="post-nav-item">
-    <a href="/2020/06/13/%E7%A9%BA%E6%9C%89-MySQL-Server-%E5%A6%82%E4%BD%95%E6%88%90%E4%B8%BA%E9%AB%98%E7%8E%A9/" rel="next" title="空有 MySQL Server 如何成为高玩">
-      空有 MySQL Server 如何成为高玩 <i class="fa fa-chevron-right"></i>
+    <a href="/2020/11/30/ClickHouse-OOM-%E5%88%86%E6%9E%90/" rel="prev" title="ClickHouse OOM 分析">
+      <i class="fa fa-chevron-left"></i> ClickHouse OOM 分析
     </a></div>
+      <div class="post-nav-item"></div>
     </div>
       </footer>
     
@@ -405,7 +415,7 @@
 
       <!--noindex-->
       <div class="post-toc-wrap sidebar-panel">
-          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#1-编译-release-版本"><span class="nav-number">1.</span> <span class="nav-text">1. 编译 release 版本</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2-编译-Debug-版本"><span class="nav-number">2.</span> <span class="nav-text">2. 编译 Debug 版本</span></a></li></ol></div>
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#组成部分"><span class="nav-number">1.</span> <span class="nav-text">组成部分</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Hash-Function"><span class="nav-number">1.1.</span> <span class="nav-text">Hash Function</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Array"><span class="nav-number">1.2.</span> <span class="nav-text">Array</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Collisions-in-hash-tables-amp-resolutions"><span class="nav-number">2.</span> <span class="nav-text">Collisions in hash tables &amp; resolutions</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Liner-probing"><span class="nav-number">2.1.</span> <span class="nav-text">Liner probing</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Chaining"><span class="nav-number">2.2.</span> <span class="nav-text">Chaining</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Resizing-the-HashTable"><span class="nav-number">2.3.</span> <span class="nav-text">Resizing the HashTable</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Implementation"><span class="nav-number">3.</span> <span class="nav-text">Implementation</span></a></li></ol></div>
       </div>
       <!--/noindex-->
 
