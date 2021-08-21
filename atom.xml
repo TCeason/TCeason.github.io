@@ -6,7 +6,7 @@
   <link href="/atom.xml" rel="self"/>
   
   <link href="http://tceason.github.io/"/>
-  <updated>2021-06-30T14:33:35.361Z</updated>
+  <updated>2021-08-21T05:04:16.120Z</updated>
   <id>http://tceason.github.io/</id>
   
   <author>
@@ -17,11 +17,34 @@
   <generator uri="https://hexo.io/">Hexo</generator>
   
   <entry>
+    <title>更方便的使用git</title>
+    <link href="http://tceason.github.io/2021/08/21/%E6%9B%B4%E6%96%B9%E4%BE%BF%E7%9A%84%E4%BD%BF%E7%94%A8git/"/>
+    <id>http://tceason.github.io/2021/08/21/%E6%9B%B4%E6%96%B9%E4%BE%BF%E7%9A%84%E4%BD%BF%E7%94%A8git/</id>
+    <published>2021-08-21T04:26:09.000Z</published>
+    <updated>2021-08-21T05:04:16.120Z</updated>
+    
+    <summary type="html">
+    
+      &lt;p&gt;在我们日常学习和工作中， &lt;a href=&quot;https://git-scm.com/&quot; target=&quot;_blank&quot; rel=&quot;noopener&quot;&gt;git&lt;/a&gt; 已经逐渐的和程序员绑定到了一起。&lt;/p&gt;
+&lt;p&gt;关于 git ，大家是这样去定义的：&lt;/p&gt;
+&lt;figure class=&quot;highlight plain&quot;&gt;&lt;table&gt;&lt;tr&gt;&lt;td class=&quot;gutter&quot;&gt;&lt;pre&gt;&lt;span class=&quot;line&quot;&gt;1&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;2&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;3&lt;/span&gt;&lt;br&gt;&lt;/pre&gt;&lt;/td&gt;&lt;td class=&quot;code&quot;&gt;&lt;pre&gt;&lt;span class=&quot;line&quot;&gt;Git is a free and open source distributed version control system designed to handle everything from small to very large projects with speed and efficiency.&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;Git is easy to learn and has a tiny footprint with lightning fast performance. It outclasses SCM tools like Subversion, CVS, Perforce, and ClearCase with features like cheap local branching, convenient staging areas, and multiple workflows.&lt;/span&gt;&lt;br&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;&lt;/figure&gt;
+    
+    </summary>
+    
+    
+      <category term="Command" scheme="http://tceason.github.io/categories/Command/"/>
+    
+    
+      <category term="Git" scheme="http://tceason.github.io/tags/Git/"/>
+    
+  </entry>
+  
+  <entry>
     <title>什么是heap</title>
     <link href="http://tceason.github.io/2021/06/30/%E4%BB%80%E4%B9%88%E6%98%AFheap/"/>
     <id>http://tceason.github.io/2021/06/30/%E4%BB%80%E4%B9%88%E6%98%AFheap/</id>
     <published>2021-06-30T14:32:30.000Z</published>
-    <updated>2021-06-30T14:33:35.361Z</updated>
+    <updated>2021-07-14T03:28:21.820Z</updated>
     
     <summary type="html">
     
