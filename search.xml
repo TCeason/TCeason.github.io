@@ -434,4 +434,79 @@
 <p>那么应该如何做到这一点呢???</p>
 ]]></content>
   </entry>
+  <entry>
+    <title>用 OceanBase 实现 Hello World</title>
+    <url>/2021/09/04/%E7%94%A8-OceanBase-%E5%AE%9E%E7%8E%B0-Hello-World/</url>
+    <content><![CDATA[<p>首先我们来看一下什么是 <code>OceanBase</code>, 下面是来自官方的定义:</p>
+<blockquote>
+<p><a href="https://github.com/oceanbase/oceanbase" target="_blank" rel="noopener">OceanBase</a> 社区版是一款开源分布式 HTAP（Hybrid Transactional/Analytical Processing）数据库管理系统，具有原生分布式架构，支持金融级高可用、透明水平扩展、分布式事务、多租户和语法兼容等企业级特性。OceanBase 内核通过大规模商用场景的考验，已服务众多行业客户，现面向未来持续构建内核技术竞争力。</p>
+</blockquote>
+<p>而作为一个数据库疯狂热爱者，在看到它的那一刻直接下载了一份源码。而在经过一番折腾之后，终于让 OceanBase 老老实实的说了一句 Hello World。接下来跟大家分享一下我是如何做到的。</p>
+<figure class="highlight"><table><tr><td class="code"><pre><span class="line">&gt; SELECT 'Hello World';</span><br></pre></td></tr></table></figure>
+
+<p>本章完~ 哈哈，开个小玩笑。接下来让我们进入正文。</p>
+<h2 id="1-如何向-OceanBase-贡献代码"><a href="#1-如何向-OceanBase-贡献代码" class="headerlink" title="1. 如何向 OceanBase 贡献代码"></a>1. 如何向 OceanBase 贡献代码</h2><a id="more"></a>
+
+<p>众所周知，OB 在 2021 年儿童节宣布开源。或许准备稍有仓促导致很多文档介绍都没有跟上，因此如果希望给 OB 贡献代码相对就比较困难了。</p>
+<p>而函数部分功能目前看来并不是特别多，大家还是有机会从这一块入手并且向着 PMC 前进的。而作为项目启动的第一步，我们依然沿袭各个语言的经典项目 <code>Hello World</code>。</p>
+<p>那么，我们就开始不那么正式的给 OB 实现一个 hello_world() 函数吧。借此来熟悉一些 SQL 相关的模块。</p>
+<h3 id="1-1-代码模块"><a href="#1-1-代码模块" class="headerlink" title="1.1. 代码模块"></a>1.1. 代码模块</h3><p> OB 作为一个分布式数据库，代码结构是较为庞大的。而我们需要的就是抽丝剥茧的能力，摒弃掉无关部分，找到我们需要的几个目录和文件。</p>
+<p>熟悉 MySQL 的朋友应该都比较了解：如果需要向 MySQL 支持一个函数或者找一下某个已有函数的源码实现，需要去 <a href="https://github.com/mysql/mysql-server/blob/8.0/sql/item_create.h" target="_blank" rel="noopener">item_create.h</a> &amp; <a href="https://github.com/mysql/mysql-server/blob/8.0/sql/item_create.cc" target="_blank" rel="noopener">item_create.cpp</a> 找它的原生定义。</p>
+<p>而 OB 同样有类似的门户，在 OB 中严格的按照 SQL 的生命周期命名了目录。因此，我们会看到这样的结构。</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">➜  ~&#x2F;database&#x2F;source-code&#x2F;oceanbase👆 git:(hello_world) ⚡ tree -L 1 -d src&#x2F;sql</span><br><span class="line">src&#x2F;sql</span><br><span class="line">├── CMakeFiles</span><br><span class="line">├── code_generator</span><br><span class="line">├── dtl</span><br><span class="line">├── engine</span><br><span class="line">├── executor</span><br><span class="line">├── monitor</span><br><span class="line">├── optimizer</span><br><span class="line">├── parser</span><br><span class="line">├── plan_cache</span><br><span class="line">├── privilege_check</span><br><span class="line">├── resolver</span><br><span class="line">├── rewrite</span><br><span class="line">└── session</span><br><span class="line"></span><br><span class="line">13 directories</span><br></pre></td></tr></table></figure>
+
+<p>我们这次要修改的主体部分在 <a href="https://github.com/oceanbase/oceanbase/tree/master/src/sql/engine" target="_blank" rel="noopener">engine</a>目录中。</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">➜  ~&#x2F;database&#x2F;source-code&#x2F;oceanbase👆 git:(hello_world) ⚡ tree -L 1 -d src&#x2F;sql&#x2F;engine </span><br><span class="line"></span><br><span class="line">src&#x2F;sql&#x2F;engine</span><br><span class="line">├── aggregate</span><br><span class="line">├── basic</span><br><span class="line">├── cmd</span><br><span class="line">├── connect_by</span><br><span class="line">├── dml</span><br><span class="line">├── expr</span><br><span class="line">├── join</span><br><span class="line">├── pdml</span><br><span class="line">├── prepare</span><br><span class="line">├── px</span><br><span class="line">├── recursive_cte</span><br><span class="line">├── sequence</span><br><span class="line">├── set</span><br><span class="line">├── sort</span><br><span class="line">├── subquery</span><br><span class="line">├── table</span><br><span class="line">├── user_defined_function</span><br><span class="line">└── window_function</span><br><span class="line"></span><br><span class="line">18 directories</span><br></pre></td></tr></table></figure>
+
+<p>直到这里，我们还是没有看到熟悉的 func。不要着急，因为在 OB 眼中所有的函数本质都是表达式。因此，他将其命名为 <a href="https://github.com/oceanbase/oceanbase/tree/master/src/sql/engine/expr" target="_blank" rel="noopener">expr</a>。<br>举个现成的例子，比如我们都熟悉的 abs() 函数，就安安静静的在 expr 目录中。</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">➜  ~&#x2F;database&#x2F;source-code&#x2F;oceanbase&#x2F;src&#x2F;sql&#x2F;engine&#x2F;expr👆 git:(hello_world) ⚡ ls |grep ob_expr_abs.cpp</span><br><span class="line">ob_expr_abs.cpp</span><br></pre></td></tr></table></figure>
+
+<p>因此，我们确实找到了 <code>expr(表达式)</code> 的老巢。而接下来要做的就是搭一个架子出来，这个架子能够嵌入到 OB 目前已有的支持 expr 框架中。简单来说就是让 OB 能够认识函数的名字。下面是一些简单的介绍:</p>
+<blockquote>
+<ul>
+<li><a href="https://github.com/oceanbase/oceanbase/blob/master/src/sql/CMakeLists.txt" target="_blank" rel="noopener">src/sql/CMakeLists.txt</a> : 它是那么的明显以至于我都无法忽视它的存在。</li>
+<li><a href="https://github.com/oceanbase/oceanbase/blob/master/src/sql/parser/ob_item_type.h" target="_blank" rel="noopener">src/sql/parser/ob_item_type.h</a> : 当一条 SQL 通过了词法解析，获取每个 TOKEN 后，parser 层就需要做一些工作, 因此, 我们需要去 parser 目录中找一下有没有对应的文件, 经过一番筛选，确认是它。因为在<a href="https://github.com/oceanbase/oceanbase/blob/master/src/sql/parser/ob_item_type.h#L417" target="_blank" rel="noopener">该行注释</a>中已经非常清晰的告知了我们他的用途。</li>
+<li><a href="https://github.com/oceanbase/oceanbase/blob/master/src/sql/engine/expr/ob_expr_eval_functions.cpp" target="_blank" rel="noopener">src/sql/engine/expr/ob_expr_eval_functions.cpp</a> : 在之前的一些分享中已经有提到，OB 有新老 SQL 引擎的区分，而如果需要注册成为新引擎能识别的 expr 则需要在<a href="https://github.com/oceanbase/oceanbase/blob/master/src/sql/engine/expr/ob_expr_eval_functions.cpp#L260" target="_blank" rel="noopener">g_expr_eval_functions</a> 数组中进行 append。</li>
+<li><a href="https://github.com/oceanbase/oceanbase/blob/master/deps/oblib/src/lib/ob_name_def.h" target="_blank" rel="noopener">deps/oblib/src/lib/ob_name_def.h</a> : 这里面定义的是所有的关键字, 函数等等, 所有可以被日志使用的宏定义。还是以我们熟悉的 abs() 为例子，他就那么不显山不漏水的躺在<a href="https://github.com/oceanbase/oceanbase/blob/master/deps/oblib/src/lib/ob_name_def.h#L363" target="_blank" rel="noopener">这里</a>。</li>
+<li><a href="https://github.com/oceanbase/oceanbase/blob/master/src/sql/engine/expr/ob_expr_operator_factory.cpp" target="_blank" rel="noopener">src/sql/engine/expr/ob_expr_operator_factory.cpp</a> : 从文件命名来看，是所有 表达式算子（expr operator）的工厂，所以，理论上需要在这里注册函数，被 OB 所识别。从 <a href="https://github.com/oceanbase/oceanbase/blob/master/src/sql/engine/expr/ob_expr_operator_factory.cpp#L414" target="_blank" rel="noopener">这里</a> 的注释可以看到更详细的信息。</li>
+</ul>
+</blockquote>
+<p><strong>注意:</strong><br>核心改动在于:</p>
+<blockquote>
+<ul>
+<li><a href="https://github.com/oceanbase/oceanbase/blob/master/src/sql/CMakeLists.txt" target="_blank" rel="noopener">src/sql/CMakeLists.txt</a></li>
+<li><a href="https://github.com/oceanbase/oceanbase/blob/master/src/sql/parser/ob_item_type.h" target="_blank" rel="noopener">src/sql/parser/ob_item_type.h</a></li>
+<li><a href="https://github.com/oceanbase/oceanbase/blob/master/src/sql/engine/expr/ob_expr_eval_functions.cpp" target="_blank" rel="noopener">src/sql/engine/expr/ob_expr_eval_functions.cpp</a></li>
+<li><a href="https://github.com/oceanbase/oceanbase/blob/master/deps/oblib/src/lib/ob_name_def.h" target="_blank" rel="noopener">deps/oblib/src/lib/ob_name_def.h</a></li>
+<li><a href="https://github.com/oceanbase/oceanbase/blob/master/src/sql/engine/expr/ob_expr_operator_factory.cpp" target="_blank" rel="noopener">src/sql/engine/expr/ob_expr_operator_factory.cpp</a></li>
+<li><a href="https://github.com/oceanbase/oceanbase/tree/master/src/sql/engine/expr" target="_blank" rel="noopener">src/sql/engine/expr</a></li>
+</ul>
+</blockquote>
+<h2 id="2-Just-Do-It"><a href="#2-Just-Do-It" class="headerlink" title="2. Just Do It"></a>2. Just Do It</h2><p>我们直接在 <a href="https://github.com/oceanbase/oceanbase/tree/master/src/sql/engine/expr" target="_blank" rel="noopener">src/sql/engine/expr</a> 中增加一组 C++ Class <code>ob_expr_hello</code></p>
+<p>因为本函数希望实现形式是:</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">HELLO_WORLD()</span><br></pre></td></tr></table></figure>
+
+<p>可以确定这是一个入参为 0 且返回值类型为 String 的表达式. 因此, 我们进一步确定头文件中只需要这些函数, 并且作为 <a href="https://github.com/oceanbase/oceanbase/blob/master/src/sql/engine/expr/ob_expr_operator.h#L1452" target="_blank" rel="noopener">ObStringExprOperator</a> 的子类:</p>
+<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">ObExprHELLO</span> :</span> <span class="keyword">public</span> ObStringExprOperator &#123;</span><br><span class="line"><span class="keyword">public</span>:</span><br><span class="line">  <span class="function"><span class="keyword">explicit</span> <span class="title">ObExprHELLO</span><span class="params">(common::ObIAllocator&amp; alloc)</span></span>;</span><br><span class="line">  <span class="keyword">virtual</span> ~ObExprHELLO();</span><br><span class="line">  <span class="function"><span class="keyword">virtual</span> <span class="keyword">int</span> <span class="title">calc_result_type0</span><span class="params">(ObExprResType&amp; type, common::ObExprTypeCtx&amp; type_ctx)</span> <span class="keyword">const</span></span>;</span><br><span class="line">  <span class="function"><span class="keyword">virtual</span> <span class="keyword">int</span> <span class="title">calc_result0</span><span class="params">(common::ObObj&amp; result, common::ObExprCtx&amp; expr_ctx)</span> <span class="keyword">const</span></span>;</span><br><span class="line">  <span class="function"><span class="keyword">static</span> <span class="keyword">int</span> <span class="title">eval_hello</span><span class="params">(<span class="keyword">const</span> ObExpr&amp; expr, ObEvalCtx&amp; ctx, ObDatum&amp; expr_datum)</span></span>;</span><br><span class="line">  <span class="function"><span class="keyword">virtual</span> <span class="keyword">int</span> <span class="title">cg_expr</span><span class="params">(ObExprCGCtx&amp; op_cg_ctx, <span class="keyword">const</span> ObRawExpr&amp; raw_expr, ObExpr&amp; rt_expr)</span> <span class="keyword">const</span> <span class="keyword">override</span></span>;</span><br><span class="line"><span class="keyword">private</span>:</span><br><span class="line">  DISALLOW_COPY_AND_ASSIGN(ObExprHELLO);</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+<h2 id="3-来吧展示"><a href="#3-来吧展示" class="headerlink" title="3. 来吧展示"></a>3. 来吧展示</h2><figure class="highlight sql"><table><tr><td class="code"><pre><span class="line">&gt;select HELLO_WORLD();</span><br><span class="line">+<span class="comment">---------------+</span></span><br><span class="line">| HELLO_WORLD() |</span><br><span class="line">+<span class="comment">---------------+</span></span><br><span class="line">| Hello World~  |</span><br><span class="line">+<span class="comment">---------------+</span></span><br><span class="line">1 row in <span class="keyword">set</span> (<span class="number">0.00</span> sec)</span><br></pre></td></tr></table></figure>
+
+
+<h2 id="4-测试"><a href="#4-测试" class="headerlink" title="4. 测试"></a>4. 测试</h2><p>OB 的测试和 MySQL 的 mtr 测试基本一致。位于：</p>
+<p><a href="https://github.com/oceanbase/oceanbase/blob/master/test/mysql_test/test_suite/expr/t/" target="_blank" rel="noopener">https://github.com/oceanbase/oceanbase/blob/master/test/mysql_test/test_suite/expr/t/</a><br><a href="https://github.com/oceanbase/oceanbase/tree/master/test/mysql_test/test_suite/expr/r/mysql" target="_blank" rel="noopener">https://github.com/oceanbase/oceanbase/tree/master/test/mysql_test/test_suite/expr/r/mysql</a></p>
+<p>可以在本次的 commit 中查看整体代码。</p>
+<h2 id="5-总结"><a href="#5-总结" class="headerlink" title="5. 总结"></a>5. 总结</h2><p>整体来看，一个表达式的书写没有那么复杂。</p>
+<blockquote>
+<ol>
+<li>可以被编译。</li>
+<li>可以被 OB 识别。</li>
+<li>实现 expr 内部逻辑。</li>
+</ol>
+</blockquote>
+<p>在这里附上 <a href="https://github.com/TCeason/oceanbase/commit/ba3d88ccbf01d4c7dc77d3cff7e1c07485d2f041" target="_blank" rel="noopener">完整代码</a> 感兴趣的朋友可以看一看，也欢迎给 <a href="https://github.com/oceanbase/oceanbase" target="_blank" rel="noopener">OB</a> 点 Star 哦。</p>
+]]></content>
+      <categories>
+        <category>Database</category>
+      </categories>
+  </entry>
 </search>

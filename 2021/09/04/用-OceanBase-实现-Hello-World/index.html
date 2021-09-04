@@ -1,0 +1,640 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 4.2.1">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/header.jpeg">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/header.jpeg">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/header.jpeg">
+  <link rel="mask-icon" href="/images/header.jpeg" color="#222">
+  <link rel="manifest" href="/images/header.jpeg">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"tceason.github.io","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":false,"style":"default"},"back2top":{"enable":true,"sidebar":true,"scrollpercent":false},"bookmark":{"enable":true,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="首先我们来看一下什么是 OceanBase, 下面是来自官方的定义:  OceanBase 社区版是一款开源分布式 HTAP（Hybrid Transactional&#x2F;Analytical Processing）数据库管理系统，具有原生分布式架构，支持金融级高可用、透明水平扩展、分布式事务、多租户和语法兼容等企业级特性。OceanBase 内核通过大规模商用场景的考验，已服务众多行业客户，现面向未">
+<meta property="og:type" content="article">
+<meta property="og:title" content="用 OceanBase 实现 Hello World">
+<meta property="og:url" content="http://tceason.github.io/2021/09/04/%E7%94%A8-OceanBase-%E5%AE%9E%E7%8E%B0-Hello-World/index.html">
+<meta property="og:site_name" content="Eason&#39;s blog">
+<meta property="og:description" content="首先我们来看一下什么是 OceanBase, 下面是来自官方的定义:  OceanBase 社区版是一款开源分布式 HTAP（Hybrid Transactional&#x2F;Analytical Processing）数据库管理系统，具有原生分布式架构，支持金融级高可用、透明水平扩展、分布式事务、多租户和语法兼容等企业级特性。OceanBase 内核通过大规模商用场景的考验，已服务众多行业客户，现面向未">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2021-09-04T01:15:20.000Z">
+<meta property="article:modified_time" content="2021-09-04T04:44:18.032Z">
+<meta property="article:author" content="Eason">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="http://tceason.github.io/2021/09/04/%E7%94%A8-OceanBase-%E5%AE%9E%E7%8E%B0-Hello-World/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>用 OceanBase 实现 Hello World | Eason's blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+<link rel="alternate" href="/atom.xml" title="Eason's blog" type="application/atom+xml">
+</head>
+
+<a href="https://github.com/TCeason" target="_blank" rel="noopener" class="github-corner" aria-label="View source on GitHub"><svg width="80" height="80" viewBox="0 0 250 250" style="fill:#64CEAA; color:#fff; position: absolute; top: 0; border: 0; right: 0;" aria-hidden="true"><path d="M0,0 L115,115 L130,115 L142,142 L250,250 L250,0 Z"></path><path d="M128.3,109.0 C113.8,99.7 119.0,89.6 119.0,89.6 C122.0,82.7 120.5,78.6 120.5,78.6 C119.2,72.0 123.4,76.3 123.4,76.3 C127.3,80.9 125.5,87.3 125.5,87.3 C122.9,97.6 130.6,101.9 134.4,103.2" fill="currentColor" style="transform-origin: 130px 106px;" class="octo-arm"></path><path d="M115.0,115.0 C114.9,115.1 118.7,116.5 119.8,115.4 L133.7,101.6 C136.9,99.2 139.9,98.4 142.2,98.6 C133.8,88.0 127.5,74.4 143.8,58.0 C148.5,53.4 154.0,51.2 159.7,51.0 C160.3,49.4 163.2,43.6 171.4,40.1 C171.4,40.1 176.1,42.5 178.8,56.2 C183.1,58.6 187.2,61.8 190.9,65.4 C194.5,69.0 197.7,73.2 200.1,77.6 C213.8,80.2 216.3,84.9 216.3,84.9 C212.7,93.1 206.9,96.0 205.4,96.6 C205.1,102.4 203.0,107.8 198.3,112.5 C181.9,128.9 168.3,122.5 157.7,114.1 C157.9,116.9 156.7,120.9 152.7,124.9 L141.0,136.5 C139.8,137.7 141.6,141.9 141.8,141.8 Z" fill="currentColor" class="octo-body"></path></svg></a><style>.github-corner:hover .octo-arm{animation:octocat-wave 560ms ease-in-out}@keyframes octocat-wave{0%,100%{transform:rotate(0)}20%,60%{transform:rotate(-25deg)}40%,80%{transform:rotate(10deg)}}@media (max-width:500px){.github-corner:hover .octo-arm{animation:none}.github-corner .octo-arm{animation:octocat-wave 560ms ease-in-out}}</style>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Eason's blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">空杯心态</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+        <li class="menu-item menu-item-commonweal">
+
+    <a href="/404/" rel="section"><i class="fa fa-heartbeat fa-fw"></i>公益 404</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="reading-progress-bar"></div>
+  <a role="button" class="book-mark-link book-mark-link-fixed"></a>
+
+  <a href="https://github.com/TCeason" class="github-corner" title="Follow me on GitHub" aria-label="Follow me on GitHub" rel="noopener" target="_blank"><svg width="80" height="80" viewBox="0 0 250 250" aria-hidden="true"><path d="M0,0 L115,115 L130,115 L142,142 L250,250 L250,0 Z"></path><path d="M128.3,109.0 C113.8,99.7 119.0,89.6 119.0,89.6 C122.0,82.7 120.5,78.6 120.5,78.6 C119.2,72.0 123.4,76.3 123.4,76.3 C127.3,80.9 125.5,87.3 125.5,87.3 C122.9,97.6 130.6,101.9 134.4,103.2" fill="currentColor" style="transform-origin: 130px 106px;" class="octo-arm"></path><path d="M115.0,115.0 C114.9,115.1 118.7,116.5 119.8,115.4 L133.7,101.6 C136.9,99.2 139.9,98.4 142.2,98.6 C133.8,88.0 127.5,74.4 143.8,58.0 C148.5,53.4 154.0,51.2 159.7,51.0 C160.3,49.4 163.2,43.6 171.4,40.1 C171.4,40.1 176.1,42.5 178.8,56.2 C183.1,58.6 187.2,61.8 190.9,65.4 C194.5,69.0 197.7,73.2 200.1,77.6 C213.8,80.2 216.3,84.9 216.3,84.9 C212.7,93.1 206.9,96.0 205.4,96.6 C205.1,102.4 203.0,107.8 198.3,112.5 C181.9,128.9 168.3,122.5 157.7,114.1 C157.9,116.9 156.7,120.9 152.7,124.9 L141.0,136.5 C139.8,137.7 141.6,141.9 141.8,141.8 Z" fill="currentColor" class="octo-body"></path></svg></a>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://tceason.github.io/2021/09/04/%E7%94%A8-OceanBase-%E5%AE%9E%E7%8E%B0-Hello-World/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/header.jpeg">
+      <meta itemprop="name" content="Eason">
+      <meta itemprop="description" content="">
+    </span>
+
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Eason's blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          用 OceanBase 实现 Hello World
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2021-09-04 09:15:20 / 修改时间：12:44:18" itemprop="dateCreated datePublished" datetime="2021-09-04T09:15:20+08:00">2021-09-04</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Database/" itemprop="url" rel="index"><span itemprop="name">Database</span></a>
+                </span>
+            </span>
+
+          
+            <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv" style="display: none;">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span id="busuanzi_value_page_pv"></span>
+            </span>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="far fa-file-word"></i>
+              </span>
+              <span>3.7k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="far fa-clock"></i>
+              </span>
+              <span>3 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>首先我们来看一下什么是 <code>OceanBase</code>, 下面是来自官方的定义:</p>
+<blockquote>
+<p><a href="https://github.com/oceanbase/oceanbase" target="_blank" rel="noopener">OceanBase</a> 社区版是一款开源分布式 HTAP（Hybrid Transactional/Analytical Processing）数据库管理系统，具有原生分布式架构，支持金融级高可用、透明水平扩展、分布式事务、多租户和语法兼容等企业级特性。OceanBase 内核通过大规模商用场景的考验，已服务众多行业客户，现面向未来持续构建内核技术竞争力。</p>
+</blockquote>
+<p>而作为一个数据库疯狂热爱者，在看到它的那一刻直接下载了一份源码。而在经过一番折腾之后，终于让 OceanBase 老老实实的说了一句 Hello World。接下来跟大家分享一下我是如何做到的。</p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">&gt; SELECT 'Hello World';</span><br></pre></td></tr></table></figure>
+
+<p>本章完~ 哈哈，开个小玩笑。接下来让我们进入正文。</p>
+<h2 id="1-如何向-OceanBase-贡献代码"><a href="#1-如何向-OceanBase-贡献代码" class="headerlink" title="1. 如何向 OceanBase 贡献代码"></a>1. 如何向 OceanBase 贡献代码</h2><a id="more"></a>
+
+<p>众所周知，OB 在 2021 年儿童节宣布开源。或许准备稍有仓促导致很多文档介绍都没有跟上，因此如果希望给 OB 贡献代码相对就比较困难了。</p>
+<p>而函数部分功能目前看来并不是特别多，大家还是有机会从这一块入手并且向着 PMC 前进的。而作为项目启动的第一步，我们依然沿袭各个语言的经典项目 <code>Hello World</code>。</p>
+<p>那么，我们就开始不那么正式的给 OB 实现一个 hello_world() 函数吧。借此来熟悉一些 SQL 相关的模块。</p>
+<h3 id="1-1-代码模块"><a href="#1-1-代码模块" class="headerlink" title="1.1. 代码模块"></a>1.1. 代码模块</h3><p> OB 作为一个分布式数据库，代码结构是较为庞大的。而我们需要的就是抽丝剥茧的能力，摒弃掉无关部分，找到我们需要的几个目录和文件。</p>
+<p>熟悉 MySQL 的朋友应该都比较了解：如果需要向 MySQL 支持一个函数或者找一下某个已有函数的源码实现，需要去 <a href="https://github.com/mysql/mysql-server/blob/8.0/sql/item_create.h" target="_blank" rel="noopener">item_create.h</a> &amp; <a href="https://github.com/mysql/mysql-server/blob/8.0/sql/item_create.cc" target="_blank" rel="noopener">item_create.cpp</a> 找它的原生定义。</p>
+<p>而 OB 同样有类似的门户，在 OB 中严格的按照 SQL 的生命周期命名了目录。因此，我们会看到这样的结构。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line">➜  ~&#x2F;database&#x2F;source-code&#x2F;oceanbase👆 git:(hello_world) ⚡ tree -L 1 -d src&#x2F;sql</span><br><span class="line">src&#x2F;sql</span><br><span class="line">├── CMakeFiles</span><br><span class="line">├── code_generator</span><br><span class="line">├── dtl</span><br><span class="line">├── engine</span><br><span class="line">├── executor</span><br><span class="line">├── monitor</span><br><span class="line">├── optimizer</span><br><span class="line">├── parser</span><br><span class="line">├── plan_cache</span><br><span class="line">├── privilege_check</span><br><span class="line">├── resolver</span><br><span class="line">├── rewrite</span><br><span class="line">└── session</span><br><span class="line"></span><br><span class="line">13 directories</span><br></pre></td></tr></table></figure>
+
+<p>我们这次要修改的主体部分在 <a href="https://github.com/oceanbase/oceanbase/tree/master/src/sql/engine" target="_blank" rel="noopener">engine</a>目录中。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line">➜  ~&#x2F;database&#x2F;source-code&#x2F;oceanbase👆 git:(hello_world) ⚡ tree -L 1 -d src&#x2F;sql&#x2F;engine </span><br><span class="line"></span><br><span class="line">src&#x2F;sql&#x2F;engine</span><br><span class="line">├── aggregate</span><br><span class="line">├── basic</span><br><span class="line">├── cmd</span><br><span class="line">├── connect_by</span><br><span class="line">├── dml</span><br><span class="line">├── expr</span><br><span class="line">├── join</span><br><span class="line">├── pdml</span><br><span class="line">├── prepare</span><br><span class="line">├── px</span><br><span class="line">├── recursive_cte</span><br><span class="line">├── sequence</span><br><span class="line">├── set</span><br><span class="line">├── sort</span><br><span class="line">├── subquery</span><br><span class="line">├── table</span><br><span class="line">├── user_defined_function</span><br><span class="line">└── window_function</span><br><span class="line"></span><br><span class="line">18 directories</span><br></pre></td></tr></table></figure>
+
+<p>直到这里，我们还是没有看到熟悉的 func。不要着急，因为在 OB 眼中所有的函数本质都是表达式。因此，他将其命名为 <a href="https://github.com/oceanbase/oceanbase/tree/master/src/sql/engine/expr" target="_blank" rel="noopener">expr</a>。<br>举个现成的例子，比如我们都熟悉的 abs() 函数，就安安静静的在 expr 目录中。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">➜  ~&#x2F;database&#x2F;source-code&#x2F;oceanbase&#x2F;src&#x2F;sql&#x2F;engine&#x2F;expr👆 git:(hello_world) ⚡ ls |grep ob_expr_abs.cpp</span><br><span class="line">ob_expr_abs.cpp</span><br></pre></td></tr></table></figure>
+
+<p>因此，我们确实找到了 <code>expr(表达式)</code> 的老巢。而接下来要做的就是搭一个架子出来，这个架子能够嵌入到 OB 目前已有的支持 expr 框架中。简单来说就是让 OB 能够认识函数的名字。下面是一些简单的介绍:</p>
+<blockquote>
+<ul>
+<li><a href="https://github.com/oceanbase/oceanbase/blob/master/src/sql/CMakeLists.txt" target="_blank" rel="noopener">src/sql/CMakeLists.txt</a> : 它是那么的明显以至于我都无法忽视它的存在。</li>
+<li><a href="https://github.com/oceanbase/oceanbase/blob/master/src/sql/parser/ob_item_type.h" target="_blank" rel="noopener">src/sql/parser/ob_item_type.h</a> : 当一条 SQL 通过了词法解析，获取每个 TOKEN 后，parser 层就需要做一些工作, 因此, 我们需要去 parser 目录中找一下有没有对应的文件, 经过一番筛选，确认是它。因为在<a href="https://github.com/oceanbase/oceanbase/blob/master/src/sql/parser/ob_item_type.h#L417" target="_blank" rel="noopener">该行注释</a>中已经非常清晰的告知了我们他的用途。</li>
+<li><a href="https://github.com/oceanbase/oceanbase/blob/master/src/sql/engine/expr/ob_expr_eval_functions.cpp" target="_blank" rel="noopener">src/sql/engine/expr/ob_expr_eval_functions.cpp</a> : 在之前的一些分享中已经有提到，OB 有新老 SQL 引擎的区分，而如果需要注册成为新引擎能识别的 expr 则需要在<a href="https://github.com/oceanbase/oceanbase/blob/master/src/sql/engine/expr/ob_expr_eval_functions.cpp#L260" target="_blank" rel="noopener">g_expr_eval_functions</a> 数组中进行 append。</li>
+<li><a href="https://github.com/oceanbase/oceanbase/blob/master/deps/oblib/src/lib/ob_name_def.h" target="_blank" rel="noopener">deps/oblib/src/lib/ob_name_def.h</a> : 这里面定义的是所有的关键字, 函数等等, 所有可以被日志使用的宏定义。还是以我们熟悉的 abs() 为例子，他就那么不显山不漏水的躺在<a href="https://github.com/oceanbase/oceanbase/blob/master/deps/oblib/src/lib/ob_name_def.h#L363" target="_blank" rel="noopener">这里</a>。</li>
+<li><a href="https://github.com/oceanbase/oceanbase/blob/master/src/sql/engine/expr/ob_expr_operator_factory.cpp" target="_blank" rel="noopener">src/sql/engine/expr/ob_expr_operator_factory.cpp</a> : 从文件命名来看，是所有 表达式算子（expr operator）的工厂，所以，理论上需要在这里注册函数，被 OB 所识别。从 <a href="https://github.com/oceanbase/oceanbase/blob/master/src/sql/engine/expr/ob_expr_operator_factory.cpp#L414" target="_blank" rel="noopener">这里</a> 的注释可以看到更详细的信息。</li>
+</ul>
+</blockquote>
+<p><strong>注意:</strong><br>核心改动在于:</p>
+<blockquote>
+<ul>
+<li><a href="https://github.com/oceanbase/oceanbase/blob/master/src/sql/CMakeLists.txt" target="_blank" rel="noopener">src/sql/CMakeLists.txt</a></li>
+<li><a href="https://github.com/oceanbase/oceanbase/blob/master/src/sql/parser/ob_item_type.h" target="_blank" rel="noopener">src/sql/parser/ob_item_type.h</a></li>
+<li><a href="https://github.com/oceanbase/oceanbase/blob/master/src/sql/engine/expr/ob_expr_eval_functions.cpp" target="_blank" rel="noopener">src/sql/engine/expr/ob_expr_eval_functions.cpp</a></li>
+<li><a href="https://github.com/oceanbase/oceanbase/blob/master/deps/oblib/src/lib/ob_name_def.h" target="_blank" rel="noopener">deps/oblib/src/lib/ob_name_def.h</a></li>
+<li><a href="https://github.com/oceanbase/oceanbase/blob/master/src/sql/engine/expr/ob_expr_operator_factory.cpp" target="_blank" rel="noopener">src/sql/engine/expr/ob_expr_operator_factory.cpp</a></li>
+<li><a href="https://github.com/oceanbase/oceanbase/tree/master/src/sql/engine/expr" target="_blank" rel="noopener">src/sql/engine/expr</a></li>
+</ul>
+</blockquote>
+<h2 id="2-Just-Do-It"><a href="#2-Just-Do-It" class="headerlink" title="2. Just Do It"></a>2. Just Do It</h2><p>我们直接在 <a href="https://github.com/oceanbase/oceanbase/tree/master/src/sql/engine/expr" target="_blank" rel="noopener">src/sql/engine/expr</a> 中增加一组 C++ Class <code>ob_expr_hello</code></p>
+<p>因为本函数希望实现形式是:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">HELLO_WORLD()</span><br></pre></td></tr></table></figure>
+
+<p>可以确定这是一个入参为 0 且返回值类型为 String 的表达式. 因此, 我们进一步确定头文件中只需要这些函数, 并且作为 <a href="https://github.com/oceanbase/oceanbase/blob/master/src/sql/engine/expr/ob_expr_operator.h#L1452" target="_blank" rel="noopener">ObStringExprOperator</a> 的子类:</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">ObExprHELLO</span> :</span> <span class="keyword">public</span> ObStringExprOperator &#123;</span><br><span class="line"><span class="keyword">public</span>:</span><br><span class="line">  <span class="function"><span class="keyword">explicit</span> <span class="title">ObExprHELLO</span><span class="params">(common::ObIAllocator&amp; alloc)</span></span>;</span><br><span class="line">  <span class="keyword">virtual</span> ~ObExprHELLO();</span><br><span class="line">  <span class="function"><span class="keyword">virtual</span> <span class="keyword">int</span> <span class="title">calc_result_type0</span><span class="params">(ObExprResType&amp; type, common::ObExprTypeCtx&amp; type_ctx)</span> <span class="keyword">const</span></span>;</span><br><span class="line">  <span class="function"><span class="keyword">virtual</span> <span class="keyword">int</span> <span class="title">calc_result0</span><span class="params">(common::ObObj&amp; result, common::ObExprCtx&amp; expr_ctx)</span> <span class="keyword">const</span></span>;</span><br><span class="line">  <span class="function"><span class="keyword">static</span> <span class="keyword">int</span> <span class="title">eval_hello</span><span class="params">(<span class="keyword">const</span> ObExpr&amp; expr, ObEvalCtx&amp; ctx, ObDatum&amp; expr_datum)</span></span>;</span><br><span class="line">  <span class="function"><span class="keyword">virtual</span> <span class="keyword">int</span> <span class="title">cg_expr</span><span class="params">(ObExprCGCtx&amp; op_cg_ctx, <span class="keyword">const</span> ObRawExpr&amp; raw_expr, ObExpr&amp; rt_expr)</span> <span class="keyword">const</span> <span class="keyword">override</span></span>;</span><br><span class="line"><span class="keyword">private</span>:</span><br><span class="line">  DISALLOW_COPY_AND_ASSIGN(ObExprHELLO);</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+<h2 id="3-来吧展示"><a href="#3-来吧展示" class="headerlink" title="3. 来吧展示"></a>3. 来吧展示</h2><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">&gt;select HELLO_WORLD();</span><br><span class="line">+<span class="comment">---------------+</span></span><br><span class="line">| HELLO_WORLD() |</span><br><span class="line">+<span class="comment">---------------+</span></span><br><span class="line">| Hello World~  |</span><br><span class="line">+<span class="comment">---------------+</span></span><br><span class="line">1 row in <span class="keyword">set</span> (<span class="number">0.00</span> sec)</span><br></pre></td></tr></table></figure>
+
+
+<h2 id="4-测试"><a href="#4-测试" class="headerlink" title="4. 测试"></a>4. 测试</h2><p>OB 的测试和 MySQL 的 mtr 测试基本一致。位于：</p>
+<p><a href="https://github.com/oceanbase/oceanbase/blob/master/test/mysql_test/test_suite/expr/t/" target="_blank" rel="noopener">https://github.com/oceanbase/oceanbase/blob/master/test/mysql_test/test_suite/expr/t/</a><br><a href="https://github.com/oceanbase/oceanbase/tree/master/test/mysql_test/test_suite/expr/r/mysql" target="_blank" rel="noopener">https://github.com/oceanbase/oceanbase/tree/master/test/mysql_test/test_suite/expr/r/mysql</a></p>
+<p>可以在本次的 commit 中查看整体代码。</p>
+<h2 id="5-总结"><a href="#5-总结" class="headerlink" title="5. 总结"></a>5. 总结</h2><p>整体来看，一个表达式的书写没有那么复杂。</p>
+<blockquote>
+<ol>
+<li>可以被编译。</li>
+<li>可以被 OB 识别。</li>
+<li>实现 expr 内部逻辑。</li>
+</ol>
+</blockquote>
+<p>在这里附上 <a href="https://github.com/TCeason/oceanbase/commit/ba3d88ccbf01d4c7dc77d3cff7e1c07485d2f041" target="_blank" rel="noopener">完整代码</a> 感兴趣的朋友可以看一看，也欢迎给 <a href="https://github.com/oceanbase/oceanbase" target="_blank" rel="noopener">OB</a> 点 Star 哦。</p>
+
+    </div>
+
+    
+    
+    
+
+	<div>
+        
+          <div>
+    
+	    <span>本作品采用</span>
+        <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener">知识共享署名 4.0 国际许可协议</a>
+        <span>进行许可。 转载时请注明原文链接。</span>
+		<img src="/images/wechat.jpg" alt="Do it" style="margin: auto; display: block;" height="200" width="200"/>
+        <div style="margin: auto; text-align: center; font-size: 0.8em; color: grey;">备注请声明tceason.github.io</div>
+    
+</div>
+
+
+        
+    </div>
+        <div class="reward-container">
+  <div>感谢您的鼓励，我会继续努力创作。</div>
+  <button onclick="var qr = document.getElementById('qr'); qr.style.display = (qr.style.display === 'none') ? 'block' : 'none';">
+    打赏
+  </button>
+  <div id="qr" style="display: none;">
+      
+      <div style="display: inline-block;">
+        <img src="/images/wechatpay.jpg" alt="Eason 微信支付">
+        <p>微信支付</p>
+      </div>
+      
+      <div style="display: inline-block;">
+        <img src="/images/alipay.jpg" alt="Eason 支付宝">
+        <p>支付宝</p>
+      </div>
+
+  </div>
+</div>
+
+
+      <footer class="post-footer">
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2021/08/28/%E4%BB%80%E4%B9%88%E6%98%AF-quicksort/" rel="prev" title="什么是 quicksort">
+      <i class="fa fa-chevron-left"></i> 什么是 quicksort
+    </a></div>
+      <div class="post-nav-item"></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#1-如何向-OceanBase-贡献代码"><span class="nav-number">1.</span> <span class="nav-text">1. 如何向 OceanBase 贡献代码</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#1-1-代码模块"><span class="nav-number">1.1.</span> <span class="nav-text">1.1. 代码模块</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2-Just-Do-It"><span class="nav-number">2.</span> <span class="nav-text">2. Just Do It</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-来吧展示"><span class="nav-number">3.</span> <span class="nav-text">3. 来吧展示</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#4-测试"><span class="nav-number">4.</span> <span class="nav-text">4. 测试</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#5-总结"><span class="nav-number">5.</span> <span class="nav-text">5. 总结</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Eason"
+      src="/images/header.jpeg">
+  <p class="site-author-name" itemprop="name">Eason</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">10</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">4</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">5</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+        <div class="back-to-top motion-element">
+          <i class="fa fa-arrow-up"></i>
+          <span>0%</span>
+        </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Eason</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-chart-area"></i>
+    </span>
+    <span title="站点总字数">NaNm</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    <span title="站点阅读时长">NaN:aN</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a> 强力驱动
+  </div>
+<div class="powered-by">
+<i class="fa fa-user-md"></i>
+<span id="busuanzi_container_site_uv">
+  本站总访客数:<span id="busuanzi_value_site_uv"></span>&nbsp;&nbsp;|
+</span>
+<span id="busuanzi_container_site_pv">
+    &nbsp;本站总访问量<span id="busuanzi_value_site_pv"></span>次
+</span>
+</div>
+</div>
+
+<script>
+    var now = new Date();
+    function createtime() {
+        var grt= new Date("03/12/2019 12:00:00");//此处修改你的建站时间或者网站上线时间
+        now.setTime(now.getTime()+250);
+        days = (now - grt ) / 1000 / 60 / 60 / 24; dnum = Math.floor(days);
+        hours = (now - grt ) / 1000 / 60 / 60 - (24 * dnum); hnum = Math.floor(hours);
+        if(String(hnum).length ==1 ){hnum = "0" + hnum;} minutes = (now - grt ) / 1000 /60 - (24 * 60 * dnum) - (60 * hnum);
+        mnum = Math.floor(minutes); if(String(mnum).length ==1 ){mnum = "0" + mnum;}
+        seconds = (now - grt ) / 1000 - (24 * 60 * 60 * dnum) - (60 * 60 * hnum) - (60 * mnum);
+        snum = Math.round(seconds); if(String(snum).length ==1 ){snum = "0" + snum;}
+        document.getElementById("timeDate").innerHTML = "本站已安全运行 "+dnum+" 天 ";
+        document.getElementById("times").innerHTML = hnum + " 小时 " + mnum + " 分 " + snum + " 秒";
+    }
+setInterval("createtime()",250);
+</script>
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <span class="post-meta-item" id="busuanzi_container_site_uv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+<script src="/js/bookmark.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+
+  	<!-- 页面点击小红心 -->
+    <script type="text/javascript" src="/js/src/love.js"></script>
+</body>
+</html>

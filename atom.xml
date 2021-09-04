@@ -6,7 +6,7 @@
   <link href="/atom.xml" rel="self"/>
   
   <link href="http://tceason.github.io/"/>
-  <updated>2021-08-28T14:18:51.720Z</updated>
+  <updated>2021-09-04T04:44:18.032Z</updated>
   <id>http://tceason.github.io/</id>
   
   <author>
@@ -15,6 +15,33 @@
   </author>
   
   <generator uri="https://hexo.io/">Hexo</generator>
+  
+  <entry>
+    <title>用 OceanBase 实现 Hello World</title>
+    <link href="http://tceason.github.io/2021/09/04/%E7%94%A8-OceanBase-%E5%AE%9E%E7%8E%B0-Hello-World/"/>
+    <id>http://tceason.github.io/2021/09/04/%E7%94%A8-OceanBase-%E5%AE%9E%E7%8E%B0-Hello-World/</id>
+    <published>2021-09-04T01:15:20.000Z</published>
+    <updated>2021-09-04T04:44:18.032Z</updated>
+    
+    <summary type="html">
+    
+      &lt;p&gt;首先我们来看一下什么是 &lt;code&gt;OceanBase&lt;/code&gt;, 下面是来自官方的定义:&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;&lt;a href=&quot;https://github.com/oceanbase/oceanbase&quot; target=&quot;_blank&quot; rel=&quot;noopener&quot;&gt;OceanBase&lt;/a&gt; 社区版是一款开源分布式 HTAP（Hybrid Transactional/Analytical Processing）数据库管理系统，具有原生分布式架构，支持金融级高可用、透明水平扩展、分布式事务、多租户和语法兼容等企业级特性。OceanBase 内核通过大规模商用场景的考验，已服务众多行业客户，现面向未来持续构建内核技术竞争力。&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;而作为一个数据库疯狂热爱者，在看到它的那一刻直接下载了一份源码。而在经过一番折腾之后，终于让 OceanBase 老老实实的说了一句 Hello World。接下来跟大家分享一下我是如何做到的。&lt;/p&gt;
+&lt;figure class=&quot;highlight&quot;&gt;&lt;table&gt;&lt;tr&gt;&lt;td class=&quot;gutter&quot;&gt;&lt;pre&gt;&lt;span class=&quot;line&quot;&gt;1&lt;/span&gt;&lt;br&gt;&lt;/pre&gt;&lt;/td&gt;&lt;td class=&quot;code&quot;&gt;&lt;pre&gt;&lt;span class=&quot;line&quot;&gt;&amp;gt; SELECT &#39;Hello World&#39;;&lt;/span&gt;&lt;br&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;&lt;/figure&gt;
+
+&lt;p&gt;本章完~ 哈哈，开个小玩笑。接下来让我们进入正文。&lt;/p&gt;
+&lt;h2 id=&quot;1-如何向-OceanBase-贡献代码&quot;&gt;&lt;a href=&quot;#1-如何向-OceanBase-贡献代码&quot; class=&quot;headerlink&quot; title=&quot;1. 如何向 OceanBase 贡献代码&quot;&gt;&lt;/a&gt;1. 如何向 OceanBase 贡献代码&lt;/h2&gt;
+    
+    </summary>
+    
+    
+      <category term="Database" scheme="http://tceason.github.io/categories/Database/"/>
+    
+    
+  </entry>
   
   <entry>
     <title>什么是 quicksort</title>
